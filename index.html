@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,11 +11,12 @@
       background: linear-gradient(to right, #e0f7fa, #f1f8e9);
       padding: 20px;
     }
-    .dashboard {
+    .dashboard, .section {
       background: #fff;
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
     }
     .sidebar {
       position: fixed;
@@ -55,10 +57,24 @@
     .section.active {
       display: block;
     }
+    .floating-emoji {
+      position: fixed;
+      font-size: 2.5rem;
+      opacity: 0;
+      animation: floatInOut 1.4s ease-in-out;
+      z-index: 9999;
+      pointer-events: none;
+    }
+    @keyframes floatInOut {
+      0% {opacity: 0; transform: translateY(30px);}
+      30% {opacity: 1; transform: translateY(0);}
+      70% {opacity: 1; transform: translateY(0);}
+      100% {opacity: 0; transform: translateY(-30px);}
+    }
   </style>
 </head>
-<body><button class="menu-toggle" onclick="toggleSidebar()">☰ القائمة</button>
-
+<body>
+  <button class="menu-toggle" onclick="toggleSidebar()">☰ القائمة</button>
   <div class="sidebar" id="sidebar">
     <h5>📁 القائمة</h5>
     <a href="#" onclick="showSection('main')">📅 جدول التحويش</a>
@@ -66,35 +82,61 @@
     <a href="#" onclick="showSection('incomplete')">❌ الشهور غير المكتملة</a>
     <a href="#" onclick="showSection('progressing')">⏳ الشهور قيد التنفيذ</a>
     <a href="#" onclick="showSection('transactions')">💳 سجل التحويل</a>
-  </div>  <div class="container-fluid">
+  </div>
+  <div class="container-fluid">
     <div class="section active" id="main">
       <h2>📅 جدول التحويش</h2>
-      <!-- جدول التحويش الأصلي يوضع هنا -->
-    </div><div class="section" id="complete">
-  <h2>✅ الشهور المكتملة</h2>
-  <ul id="completeList"></ul>
-</div>
+      <div class="mb-3">
+        <label class="form-label">السنة:</label>
+        <select id="yearSelect" class="form-select d-inline w-auto"></select>
+        <label class="form-label">الشهر:</label>
+        <select id="monthSelect" class="form-select d-inline w-auto">
+          <option value="1">يناير</option>
+          <option value="2">فبراير</option>
+          <option value="3">مارس</option>
+          <option value="4">أبريل</option>
+          <option value="5">مايو</option>
+          <option value="6">يونيو</option>
+          <option value="7" selected>يوليو</option>
+          <option value="8">أغسطس</option>
+          <option value="9">سبتمبر</option>
+          <option value="10">أكتوبر</option>
+          <option value="11">نوفمبر</option>
+          <option value="12">ديسمبر</option>
+        </select>
+        <label class="form-label">المبلغ اليومي:</label>
+        <input type="number" id="amountInput" class="form-control d-inline w-auto" value="200" />
+        <button onclick="applySettings()" class="btn btn-success">تطبيق</button>
+        <button onclick="testSound()" class="btn btn-secondary">🔊 صوت الفلوس</button>
+      </div>
 
-<div class="section" id="incomplete">
-  <h2>❌ الشهور غير المكتملة</h2>
-  <ul id="incompleteList"></ul>
-</div>
+      <div class="progress mb-4" style="height: 25px;">
+        <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+      </div>
 
-<div class="section" id="progressing">
-  <h2>⏳ الشهور قيد التنفيذ</h2>
-  <ul id="progressList"></ul>
-</div>
+      <table class="table table-bordered table-striped">
+        <thead class="table-success">
+          <tr><th>اليوم</th><th>تم التحويش؟</th><th>الإجمالي</th></tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
 
-<div class="section" id="transactions">
-  <h2>💳 سجل التحويل</h2>
-  <ul id="transactionList"></ul>
-</div>
+      <audio id="coin-sound" preload="auto">
+        <source src="https://cdn.pixabay.com/audio/2022/10/26/audio_f02ae93093.mp3" type="audio/mp3">
+      </audio>
+    </div>
 
-  </div><script>
+    <div class="section" id="complete"><h2>✅ الشهور المكتملة</h2><ul id="completeList"></ul></div>
+    <div class="section" id="incomplete"><h2>❌ الشهور غير المكتملة</h2><ul id="incompleteList"></ul></div>
+    <div class="section" id="progressing"><h2>⏳ الشهور قيد التنفيذ</h2><ul id="progressList"></ul></div>
+    <div class="section" id="transactions"><h2>💳 سجل التحويل</h2><ul id="transactionList"></ul></div>
+  </div>
+  <script>
+let dailyAmount = 200;
+
 function toggleSidebar() {
   document.getElementById('sidebar').classList.toggle('active');
 }
-
 function showSection(id) {
   document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -104,18 +146,77 @@ function showSection(id) {
   if (id === 'transactions') buildTransactions();
 }
 
+function getMonthName(m) {
+  return ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'][m-1];
+}
 function getDaysInMonth(month, year) {
   return new Date(year, month, 0).getDate();
 }
-
 function getStorageKey(year, month) {
   return `saving-${year}-${month}`;
 }
-
+function saveData(data) {
+  localStorage.setItem(getStorageKey(yearSelect.value, monthSelect.value), JSON.stringify(data));
+}
 function loadData(year, month) {
   return JSON.parse(localStorage.getItem(getStorageKey(year, month))) || [];
 }
+function buildTable() {
+  tableBody.innerHTML = '';
+  const year = parseInt(yearSelect.value);
+  const month = parseInt(monthSelect.value);
+  const days = getDaysInMonth(month, year);
+  const saved = loadData(year, month);
 
+  for (let i = 1; i <= days; i++) {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>يوم ${i}</td>
+      <td><input type="checkbox" ${saved.includes(i) ? 'checked' : ''} onchange="handleCheck(this, ${i})"/></td>
+      <td>${saved.includes(i) ? i * dailyAmount + ' جنيه' : '-'}</td>
+    `;
+    tableBody.appendChild(row);
+  }
+  updateProgress();
+}
+function handleCheck(el, day) {
+  let saved = loadData(parseInt(yearSelect.value), parseInt(monthSelect.value));
+  if (el.checked) {
+    saved.push(day);
+    coinSound.currentTime = 0;
+    coinSound.play().catch(()=>{});
+    showFloatingEmojis();
+  } else {
+    saved = saved.filter(d => d !== day);
+  }
+  saveData(saved);
+  buildTable();
+}
+function updateProgress() {
+  const saved = loadData(parseInt(yearSelect.value), parseInt(monthSelect.value));
+  const days = getDaysInMonth(parseInt(monthSelect.value), parseInt(yearSelect.value));
+  const percent = (saved.length / days) * 100;
+  progressBar.style.width = percent + '%';
+}
+function applySettings() {
+  dailyAmount = parseInt(amountInput.value);
+  buildTable();
+}
+function testSound() {
+  coinSound.currentTime = 0;
+  coinSound.play().catch(()=>{});
+}
+function showFloatingEmojis() {
+  ['10%', '50%', '80%'].forEach(pos => {
+    const emoji = document.createElement('div');
+    emoji.className = 'floating-emoji';
+    emoji.textContent = '💸👏';
+    emoji.style.left = pos;
+    emoji.style.top = '40%';
+    document.body.appendChild(emoji);
+    setTimeout(() => document.body.removeChild(emoji), 1400);
+  });
+}
 function buildCompleteList() {
   const year = new Date().getFullYear();
   const list = document.getElementById('completeList');
@@ -123,24 +224,18 @@ function buildCompleteList() {
   for (let m = 1; m <= 12; m++) {
     const saved = loadData(year, m);
     const days = getDaysInMonth(m, year);
-    if (saved.length === days) {
-      list.innerHTML += `<li>📅 ${getMonthName(m)} مكتمل</li>`;
-    }
+    if (saved.length === days) list.innerHTML += `<li>${getMonthName(m)} مكتمل ✅</li>`;
   }
 }
-
 function buildIncompleteList() {
   const year = new Date().getFullYear();
   const list = document.getElementById('incompleteList');
   list.innerHTML = '';
   for (let m = 1; m <= 12; m++) {
     const saved = loadData(year, m);
-    if (saved.length === 0) {
-      list.innerHTML += `<li>📅 ${getMonthName(m)} لا يوجد به تحويش</li>`;
-    }
+    if (saved.length === 0) list.innerHTML += `<li>${getMonthName(m)} فارغ ❌</li>`;
   }
 }
-
 function buildProgressList() {
   const year = new Date().getFullYear();
   const list = document.getElementById('progressList');
@@ -149,11 +244,10 @@ function buildProgressList() {
     const saved = loadData(year, m);
     const days = getDaysInMonth(m, year);
     if (saved.length > 0 && saved.length < days) {
-      list.innerHTML += `<li>📅 ${getMonthName(m)} - ${saved.length} من ${days} يوم</li>`;
+      list.innerHTML += `<li>${getMonthName(m)}: ${saved.length} من ${days} ⏳</li>`;
     }
   }
 }
-
 function buildTransactions() {
   const list = document.getElementById('transactionList');
   list.innerHTML = '';
@@ -161,15 +255,29 @@ function buildTransactions() {
     for (let m = 1; m <= 12; m++) {
       const saved = loadData(y, m);
       saved.forEach(day => {
-        list.innerHTML += `<li>${day}/${m}/${y} - تم تحويش مبلغ</li>`;
+        list.innerHTML += `<li>${day}/${m}/${y} - تحويش مبلغ</li>`;
       });
     }
   }
 }
 
-function getMonthName(month) {
-  const months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-  return months[month - 1];
+const yearSelect = document.getElementById('yearSelect');
+const monthSelect = document.getElementById('monthSelect');
+const amountInput = document.getElementById('amountInput');
+const tableBody = document.getElementById('table-body');
+const progressBar = document.getElementById('progress-bar');
+const coinSound = document.getElementById('coin-sound');
+
+for (let y = 2023; y <= 2035; y++) {
+  let opt = document.createElement('option');
+  opt.value = y;
+  opt.textContent = y;
+  yearSelect.appendChild(opt);
 }
-</script></body>
+yearSelect.value = new Date().getFullYear();
+
+buildTable();
+</script>
+</body>
 </html>
+  
