@@ -13,7 +13,7 @@
       margin: 0; padding: 20px;
     }
     .container {
-      max-width: 600px;
+      max-width: 700px;
       background: white;
       padding: 20px 30px;
       border-radius: 10px;
@@ -32,6 +32,34 @@
     .dashboard {
       margin-top: 30px;
       text-align: center;
+    }
+    .days-table {
+      margin-top: 10px;
+      max-width: 100%;
+      border-collapse: collapse;
+    }
+    .days-table td {
+      width: 30px;
+      height: 30px;
+      text-align: center;
+      border: 1px solid #ccc;
+      cursor: default;
+      user-select: none;
+      position: relative;
+      font-weight: bold;
+    }
+    .days-table td.checked {
+      background-color: #a5d6a7;
+      color: #2e7d32;
+    }
+    .days-table td.checked::after {
+      content: "✓";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      font-size: 16px;
+      color: #2e7d32;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -67,14 +95,16 @@
         </select>
       </div>
 
-      <div class="mb-3">
-        <label for="amountInput" class="form-label">المبلغ المحوّش (جنيه)</label>
+      <table class="days-table" id="daysTable"></table>
+
+      <div class="mb-3 mt-3">
+        <label for="amountInput" class="form-label">المبلغ اليومي المحوّش (جنيه)</label>
         <input type="number" id="amountInput" class="form-control" min="0" step="1" required />
       </div>
 
       <div class="mb-3">
         <label for="goalInput" class="form-label">الهدف الشهري (جنيه)</label>
-        <input type="number" id="goalInput" class="form-control" min="1" step="1" value="1000" required />
+        <input type="number" id="goalInput" class="form-control" min="1" step="1" readonly />
       </div>
 
       <button type="submit" class="btn btn-success w-100">حفظ التحويش</button>
@@ -90,23 +120,21 @@
   </div>
 
 <script>
-  // تهيئة بيانات الشهور بدون مبالغ، والهدف مبدئي 1000 لكل شهر
+  // بيانات الشهور مع حفظ المبلغ والأيام اللي تم التحويش فيها
   const savingsData = [
-    { month: 'يناير', saved: 0, goal: 1000 },
-    { month: 'فبراير', saved: 0, goal: 1000 },
-    { month: 'مارس', saved: 0, goal: 1000 },
-    { month: 'أبريل', saved: 0, goal: 1000 },
-    { month: 'مايو', saved: 0, goal: 1000 },
-    { month: 'يونيو', saved: 0, goal: 1000 },
-    { month: 'يوليو', saved: 0, goal: 1000 },
-    { month: 'أغسطس', saved: 0, goal: 1000 },
-    { month: 'سبتمبر', saved: 0, goal: 1000 },
-    { month: 'أكتوبر', saved: 0, goal: 1000 },
-    { month: 'نوفمبر', saved: 0, goal: 1000 },
-    { month: 'ديسمبر', saved: 0, goal: 1000 },
+    { month: 'يناير', saved: 0, goal: 1000, daysSaved: [] },
+    { month: 'فبراير', saved: 0, goal: 1000, daysSaved: [] },
+    { month: 'مارس', saved: 0, goal: 1000, daysSaved: [] },
+    { month: 'أبريل', saved: 0, goal: 1000, daysSaved: [] },
+    { month: 'مايو', saved: 0, goal: 1000, daysSaved: [] },
+    { month: 'يونيو', saved: 0, goal: 1000, daysSaved: [] },
+    { month: 'يوليو', saved: 0, goal: 1000, daysSaved: [] },
+    { month: 'أغسطس', saved: 0, goal: 1000, daysSaved: [] },
+    { month: 'سبتمبر', saved: 0, goal: 1000, daysSaved: [] },
+    { month: 'أكتوبر', saved: 0, goal: 1000, daysSaved: [] },
+    { month: 'نوفمبر', saved: 0, goal: 1000, daysSaved: [] },
+    { month: 'ديسمبر', saved: 0, goal: 1000, daysSaved: [] },
   ];
-
-  const monthNames = savingsData.map(s => s.month);
 
   // تعبئة اختيار اليوم (1 - 31)
   const daySelect = document.getElementById('daySelect');
@@ -115,6 +143,45 @@
     opt.value = d;
     opt.textContent = d;
     daySelect.appendChild(opt);
+  }
+
+  // تحديث جدول الأيام بعلامة الصح على الأيام التي تم التحويش فيها
+  function updateDaysTable(month) {
+    const table = document.getElementById('daysTable');
+    table.innerHTML = '';
+
+    const monthData = savingsData.find(s => s.month === month);
+    if(!monthData) return;
+
+    for(let day=1; day<=31; day++) {
+      const td = document.createElement('td');
+      td.textContent = day;
+
+      if(monthData.daysSaved.includes(day)) {
+        td.classList.add('checked');
+      }
+
+      table.appendChild(td);
+    }
+  }
+
+  // تحديد عدد أيام كل شهر (تقريبياً)
+  const daysInMonth = {
+    'يناير': 31, 'فبراير': 28, 'مارس': 31, 'أبريل': 30,
+    'مايو': 31, 'يونيو': 30, 'يوليو': 31, 'أغسطس': 31,
+    'سبتمبر': 30, 'أكتوبر': 31, 'نوفمبر': 30, 'ديسمبر': 31
+  };
+
+  // حساب الهدف تلقائيًا = المبلغ اليومي × عدد أيام الشهر
+  function updateGoal(month, dailyAmount) {
+    const daysCount = daysInMonth[month] || 30;
+    const goalInput = document.getElementById('goalInput');
+
+    if(dailyAmount > 0) {
+      goalInput.value = dailyAmount * daysCount;
+    } else {
+      goalInput.value = '';
+    }
   }
 
   // دالة لتحديد حالة الشهر
@@ -182,18 +249,48 @@
   }
 
   // تحديث الواجهة كاملة
-  function refreshUI() {
+  function refreshUI(selectedMonth) {
+    if(selectedMonth) {
+      updateDaysTable(selectedMonth);
+    }
     updateStats();
     updateChart();
   }
+
+  // تحديث الهدف تلقائياً عند تغيير المبلغ اليومي أو الشهر
+  const amountInput = document.getElementById('amountInput');
+  const monthSelect = document.getElementById('monthSelect');
+
+  amountInput.addEventListener('input', () => {
+    const month = monthSelect.value;
+    const amount = parseFloat(amountInput.value);
+    if(month && !isNaN(amount) && amount > 0) {
+      updateGoal(month, amount);
+    } else {
+      document.getElementById('goalInput').value = '';
+    }
+  });
+
+  monthSelect.addEventListener('change', () => {
+    const month = monthSelect.value;
+    updateDaysTable(month);
+
+    // بعد اختيار الشهر، حدث الهدف حسب المبلغ اليومي المدخل
+    const amount = parseFloat(amountInput.value);
+    if(month && !isNaN(amount) && amount > 0) {
+      updateGoal(month, amount);
+    } else {
+      document.getElementById('goalInput').value = '';
+    }
+  });
 
   // معالجة النموذج عند الحفظ
   document.getElementById('savingForm').addEventListener('submit', e => {
     e.preventDefault();
 
-    const month = document.getElementById('monthSelect').value;
-    const day = parseInt(document.getElementById('daySelect').value);
-    const amount = parseFloat(document.getElementById('amountInput').value);
+    const month = monthSelect.value;
+    const day = parseInt(daySelect.value);
+    const amount = parseFloat(amountInput.value);
     const goal = parseFloat(document.getElementById('goalInput').value);
 
     if(!month || !day || isNaN(amount) || isNaN(goal) || goal <= 0) {
@@ -204,18 +301,31 @@
     // تحديث بيانات الشهر المختار
     const monthData = savingsData.find(s => s.month === month);
     if(monthData) {
-      monthData.saved = amount;
+      // زيادة المبلغ المحوّش بمقدار المبلغ اليومي
+      monthData.saved += amount;
+
+      // تحديث الهدف لو اختلف (يمكن لازم تبقى متساوية في النموذج)
       monthData.goal = goal;
-      // ممكن تخزن اليوم لو حبيت - حاليًا مش مخزن
+
+      // تسجيل اليوم في أيام التحويش إذا مش مسجل
+      if(!monthData.daysSaved.includes(day)) {
+        monthData.daysSaved.push(day);
+        monthData.daysSaved.sort((a,b) => a - b);
+      }
     }
 
-    refreshUI();
+    // إعادة تحديث الواجهة
+    refreshUI(month);
 
     alert(`تم تسجيل ${amount.toLocaleString()} جنيه لشهر ${month} بتاريخ يوم ${day}`);
-    e.target.reset();
+
+    // إعادة تعيين النموذج (ما تحذفش الشهر عشان سهولة تسجيل الأيام المتتالية)
+    amountInput.value = '';
+    daySelect.value = '';
+    document.getElementById('goalInput').value = '';
   });
 
-  // أول تحميل الصفحة
+  // عند تحميل الصفحة
   window.onload = () => {
     refreshUI();
   };
