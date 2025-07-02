@@ -1,166 +1,296 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>موقع التحويش - تسجيل جديد</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet" />
-  <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background: linear-gradient(135deg, #e0f2f1, #fce4ec);
-      margin: 0; padding: 20px;
-    }
-    .container {
-      max-width: 800px;
-      background: white;
-      padding: 20px 30px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    label {
-      font-weight: bold;
-    }
-    button {
-      background-color: #00695c;
-      border: none;
-    }
-    button:hover {
-      background-color: #004d40;
-    }
-    .dashboard {
-      margin-top: 30px;
-      text-align: center;
-    }
-    /* جدول الأيام الطولي */
-    table.days-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-    table.days-table th,
-    table.days-table td {
-      border: 1px solid #ccc;
-      padding: 8px 12px;
-      text-align: center;
-      vertical-align: middle;
-      font-weight: normal;
-      font-size: 16px;
-    }
-    table.days-table th {
-      background-color: #00695c;
-      color: white;
-      font-weight: bold;
-    }
-    .checkmark {
-      color: #2e7d32;
-      font-weight: bold;
-      font-size: 20px;
-    }
-    .no-mark {
-      color: #ccc;
-      font-weight: normal;
-      font-size: 20px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>موقع التحويش - تسجيل دخول</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet" />
+<style>
+  body {
+    font-family: 'Cairo', sans-serif;
+    background: linear-gradient(135deg, #e0f2f1, #fce4ec);
+    margin: 0; padding: 20px;
+    min-height: 100vh;
+  }
+  .container {
+    max-width: 480px;
+    background: white;
+    padding: 20px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    margin: 40px auto;
+  }
+  h3 {
+    margin-bottom: 25px;
+    text-align: center;
+  }
+  .pointer {
+    cursor: pointer;
+    color: #00695c;
+  }
+  .pointer:hover {
+    text-decoration: underline;
+  }
+  .hidden {
+    display: none !important;
+  }
+  .logout-btn {
+    background-color: #c62828;
+    border: none;
+  }
+  .logout-btn:hover {
+    background-color: #8e0000;
+  }
+</style>
 </head>
 <body>
 
-  <div class="container">
-    <h3 class="mb-4 text-center">تسجيل تحويش جديد</h3>
+<div class="container" id="loginRegisterContainer">
 
-    <form id="savingForm" class="row g-3 align-items-center">
-
-      <div class="col-md-4">
-        <label for="monthSelect" class="form-label">اختر الشهر</label>
-        <select id="monthSelect" class="form-select" required>
-          <option value="" disabled selected>اختر الشهر</option>
-          <option value="يناير">يناير</option>
-          <option value="فبراير">فبراير</option>
-          <option value="مارس">مارس</option>
-          <option value="أبريل">أبريل</option>
-          <option value="مايو">مايو</option>
-          <option value="يونيو">يونيو</option>
-          <option value="يوليو">يوليو</option>
-          <option value="أغسطس">أغسطس</option>
-          <option value="سبتمبر">سبتمبر</option>
-          <option value="أكتوبر">أكتوبر</option>
-          <option value="نوفمبر">نوفمبر</option>
-          <option value="ديسمبر">ديسمبر</option>
-        </select>
+  <!-- تسجيل الدخول -->
+  <div id="loginForm">
+    <h3>تسجيل الدخول</h3>
+    <form id="formLogin">
+      <div class="mb-3">
+        <label for="loginUsername" class="form-label">اسم المستخدم</label>
+        <input type="text" id="loginUsername" class="form-control" required />
       </div>
-
-      <div class="col-md-2">
-        <label for="daySelect" class="form-label">اختر اليوم</label>
-        <select id="daySelect" class="form-select" required>
-          <option value="" disabled selected>اختر اليوم</option>
-        </select>
+      <div class="mb-3">
+        <label for="loginPassword" class="form-label">كلمة المرور</label>
+        <input type="password" id="loginPassword" class="form-control" required />
       </div>
-
-      <div class="col-md-3">
-        <label for="amountInput" class="form-label">المبلغ اليومي المحوّش (جنيه)</label>
-        <input type="number" id="amountInput" class="form-control" min="0" step="1" required />
-      </div>
-
-      <div class="col-md-3 d-flex align-items-end">
-        <button type="submit" class="btn btn-success w-100">حفظ التحويش</button>
-      </div>
-
+      <button type="submit" class="btn btn-success w-100">دخول</button>
     </form>
-
-    <table class="days-table mt-4">
-      <thead>
-        <tr>
-          <th>اليوم</th>
-          <th>تم التحويش؟</th>
-          <th>المبلغ المحوّش (جنيه)</th>
-        </tr>
-      </thead>
-      <tbody id="daysTableBody">
-        <!-- سيتم ملء الجدول برمجياً -->
-      </tbody>
-    </table>
-
-    <div class="dashboard mt-4 text-center">
-      <h4>إحصائيات التحويش</h4>
-      <p id="statsComplete">✅ شهور مكتملة: 0</p>
-      <p id="statsProgress">⏳ تحت التنفيذ: 0</p>
-      <p id="statsIncomplete">❌ غير مكتملة: 0</p>
-      <p id="goalInfo" class="mt-3 text-muted"></p>
-    </div>
+    <p class="mt-3 text-center">ليس لديك حساب؟ <span class="pointer" id="showRegister">سجل هنا</span></p>
   </div>
 
-<script>
-  // بيانات الشهور مع حفظ المبلغ والأيام اللي تم التحويش فيها (يوم => مبلغ)
-  const savingsData = [
-    { month: 'يناير', saved: 0, goal: 1000, daysSaved: {} },
-    { month: 'فبراير', saved: 0, goal: 1000, daysSaved: {} },
-    { month: 'مارس', saved: 0, goal: 1000, daysSaved: {} },
-    { month: 'أبريل', saved: 0, goal: 1000, daysSaved: {} },
-    { month: 'مايو', saved: 0, goal: 1000, daysSaved: {} },
-    { month: 'يونيو', saved: 0, goal: 1000, daysSaved: {} },
-    { month: 'يوليو', saved: 0, goal: 1000, daysSaved: {} },
-    { month: 'أغسطس', saved: 0, goal: 1000, daysSaved: {} },
-    { month: 'سبتمبر', saved: 0, goal: 1000, daysSaved: {} },
-    { month: 'أكتوبر', saved: 0, goal: 1000, daysSaved: {} },
-    { month: 'نوفمبر', saved: 0, goal: 1000, daysSaved: {} },
-    { month: 'ديسمبر', saved: 0, goal: 1000, daysSaved: {} },
-  ];
+  <!-- تسجيل حساب جديد -->
+  <div id="registerForm" class="hidden">
+    <h3>إنشاء حساب جديد</h3>
+    <form id="formRegister">
+      <div class="mb-3">
+        <label for="registerUsername" class="form-label">اسم المستخدم</label>
+        <input type="text" id="registerUsername" class="form-control" required />
+      </div>
+      <div class="mb-3">
+        <label for="registerPassword" class="form-label">كلمة المرور</label>
+        <input type="password" id="registerPassword" class="form-control" required />
+      </div>
+      <button type="submit" class="btn btn-primary w-100">تسجيل</button>
+    </form>
+    <p class="mt-3 text-center">لديك حساب؟ <span class="pointer" id="showLogin">سجل الدخول</span></p>
+  </div>
+</div>
 
-  // تحديد عدد أيام كل شهر (تقريبياً)
+<!-- صفحة الداشبورد بعد الدخول -->
+<div class="container hidden" id="dashboardContainer">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>لوحة تحويشك</h3>
+    <button class="btn logout-btn" id="logoutBtn">تسجيل خروج</button>
+  </div>
+
+  <form id="savingForm" class="row g-3 align-items-center mb-4">
+
+    <div class="col-md-4">
+      <label for="monthSelect" class="form-label">اختر الشهر</label>
+      <select id="monthSelect" class="form-select" required>
+        <option value="" disabled selected>اختر الشهر</option>
+        <option value="يناير">يناير</option>
+        <option value="فبراير">فبراير</option>
+        <option value="مارس">مارس</option>
+        <option value="أبريل">أبريل</option>
+        <option value="مايو">مايو</option>
+        <option value="يونيو">يونيو</option>
+        <option value="يوليو">يوليو</option>
+        <option value="أغسطس">أغسطس</option>
+        <option value="سبتمبر">سبتمبر</option>
+        <option value="أكتوبر">أكتوبر</option>
+        <option value="نوفمبر">نوفمبر</option>
+        <option value="ديسمبر">ديسمبر</option>
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <label for="daySelect" class="form-label">اختر اليوم</label>
+      <select id="daySelect" class="form-select" required>
+        <option value="" disabled selected>اختر اليوم</option>
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label for="amountInput" class="form-label">المبلغ اليومي المحوّش (جنيه)</label>
+      <input type="number" id="amountInput" class="form-control" min="0" step="1" required />
+    </div>
+
+    <div class="col-md-3 d-flex align-items-end">
+      <button type="submit" class="btn btn-success w-100">حفظ التحويش</button>
+    </div>
+
+  </form>
+
+  <table class="table table-bordered text-center">
+    <thead class="table-dark">
+      <tr>
+        <th>اليوم</th>
+        <th>تم التحويش؟</th>
+        <th>المبلغ المحوّش (جنيه)</th>
+      </tr>
+    </thead>
+    <tbody id="daysTableBody"></tbody>
+  </table>
+
+  <div class="dashboard mt-4 text-center">
+    <h4>إحصائيات التحويش</h4>
+    <p id="statsComplete">✅ شهور مكتملة: 0</p>
+    <p id="statsProgress">⏳ تحت التنفيذ: 0</p>
+    <p id="statsIncomplete">❌ غير مكتملة: 0</p>
+    <p id="goalInfo" class="mt-3 text-muted"></p>
+  </div>
+
+</div>
+
+<script>
+  // ======= نظام المستخدمين (تخزين بسيط في localStorage) =======
+
+  function getUsers() {
+    return JSON.parse(localStorage.getItem('users') || '{}');
+  }
+  function saveUsers(users) {
+    localStorage.setItem('users', JSON.stringify(users));
+  }
+  function hashPassword(pwd) {
+    // تشفير بسيط (غير آمن للتطبيقات الحقيقية، فقط للعرض)
+    return btoa(pwd);
+  }
+
+  // تسجيل حساب جديد
+  const registerForm = document.getElementById('formRegister');
+  registerForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const username = document.getElementById('registerUsername').value.trim();
+    const password = document.getElementById('registerPassword').value;
+
+    if(username === '' || password === '') {
+      alert('يرجى تعبئة جميع الحقول');
+      return;
+    }
+
+    const users = getUsers();
+    if(users[username]) {
+      alert('اسم المستخدم موجود مسبقًا');
+      return;
+    }
+    users[username] = {
+      password: hashPassword(password),
+      savingsData: []
+    };
+    saveUsers(users);
+    alert('تم إنشاء الحساب بنجاح، يمكنك الآن تسجيل الدخول');
+    showLoginForm();
+  });
+
+  // تسجيل الدخول
+  const loginForm = document.getElementById('formLogin');
+  loginForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    const users = getUsers();
+    if(!users[username] || users[username].password !== hashPassword(password)) {
+      alert('اسم المستخدم أو كلمة المرور غير صحيحة');
+      return;
+    }
+
+    // تسجيل الدخول بنجاح
+    sessionStorage.setItem('loggedInUser', username);
+    loadUserData(username);
+    showDashboard();
+  });
+
+  // إظهار واجهة التسجيل / تسجيل الدخول
+  const loginRegisterContainer = document.getElementById('loginRegisterContainer');
+  const loginFormDiv = document.getElementById('loginForm');
+  const registerFormDiv = document.getElementById('registerForm');
+  const showRegisterBtn = document.getElementById('showRegister');
+  const showLoginBtn = document.getElementById('showLogin');
+
+  showRegisterBtn.onclick = () => {
+    registerFormDiv.classList.remove('hidden');
+    loginFormDiv.classList.add('hidden');
+  };
+  showLoginBtn.onclick = () => {
+    showLoginForm();
+  };
+  function showLoginForm() {
+    registerFormDiv.classList.add('hidden');
+    loginFormDiv.classList.remove('hidden');
+  }
+
+  // صفحة الداشبورد
+  const dashboardContainer = document.getElementById('dashboardContainer');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  logoutBtn.onclick = () => {
+    sessionStorage.removeItem('loggedInUser');
+    location.reload();
+  };
+
+  // ======= بيانات التحويش لكل مستخدم =======
+  let currentUser = null;
+  let savingsData = null;
+
+  // أيام كل شهر
   const daysInMonth = {
     'يناير': 31, 'فبراير': 28, 'مارس': 31, 'أبريل': 30,
     'مايو': 31, 'يونيو': 30, 'يوليو': 31, 'أغسطس': 31,
     'سبتمبر': 30, 'أكتوبر': 31, 'نوفمبر': 30, 'ديسمبر': 31
   };
 
-  // تعبئة اختيار اليوم (1 - 31)
+  // تعبئة اختيار اليوم
   const daySelect = document.getElementById('daySelect');
   for(let d=1; d<=31; d++) {
     const opt = document.createElement('option');
     opt.value = d;
     opt.textContent = d;
     daySelect.appendChild(opt);
+  }
+
+  // تحميل بيانات المستخدم من التخزين
+  function loadUserData(username) {
+    currentUser = username;
+    const users = getUsers();
+    if(users[username]) {
+      savingsData = users[username].savingsData;
+      if(!savingsData || savingsData.length === 0) {
+        // تهيئة بيانات فارغة لكل الشهور
+        savingsData = [
+          { month: 'يناير', daysSaved: {}, goal: 0, saved: 0 },
+          { month: 'فبراير', daysSaved: {}, goal: 0, saved: 0 },
+          { month: 'مارس', daysSaved: {}, goal: 0, saved: 0 },
+          { month: 'أبريل', daysSaved: {}, goal: 0, saved: 0 },
+          { month: 'مايو', daysSaved: {}, goal: 0, saved: 0 },
+          { month: 'يونيو', daysSaved: {}, goal: 0, saved: 0 },
+          { month: 'يوليو', daysSaved: {}, goal: 0, saved: 0 },
+          { month: 'أغسطس', daysSaved: {}, goal: 0, saved: 0 },
+          { month: 'سبتمبر', daysSaved: {}, goal: 0, saved: 0 },
+          { month: 'أكتوبر', daysSaved: {}, goal: 0, saved: 0 },
+          { month: 'نوفمبر', daysSaved: {}, goal: 0, saved: 0 },
+          { month: 'ديسمبر', daysSaved: {}, goal: 0, saved: 0 },
+        ];
+      }
+      saveUserData(); // احفظ التهيئة الجديدة لو كانت ضرورية
+    }
+  }
+
+  // حفظ بيانات المستخدم
+  function saveUserData() {
+    const users = getUsers();
+    if(users[currentUser]) {
+      users[currentUser].savingsData = savingsData;
+      saveUsers(users);
+    }
   }
 
   // تحديث جدول الأيام الطولي
@@ -218,7 +348,7 @@
     }
   }
 
-  // دالة لتحديث المبلغ المحوّش الكلي للشهر بناءً على الأيام
+  // تحديث المبلغ المحوّش الكلي للشهر بناءً على الأيام
   function updateSavedTotal(month) {
     const monthData = savingsData.find(s => s.month === month);
     if (!monthData) return;
@@ -232,8 +362,8 @@
 
   // تحديث الإحصائيات
   function updateStats() {
-    const completeCount = savingsData.filter(s => s.saved >= s.goal).length;
-    const incompleteCount = savingsData.filter(s => s.saved === 0).length;
+    const completeCount = savingsData.filter(s => s.saved >= s.goal && s.goal > 0).length;
+    const incompleteCount = savingsData.filter(s => s.saved === 0 || s.goal === 0).length;
     const progressCount = savingsData.length - completeCount - incompleteCount;
 
     document.getElementById('statsComplete').textContent = `✅ شهور مكتملة: ${completeCount}`;
@@ -251,6 +381,7 @@
   }
 
   // الأحداث
+
   const amountInput = document.getElementById('amountInput');
   const monthSelect = document.getElementById('monthSelect');
 
@@ -296,6 +427,9 @@
       // تحديث المبلغ الكلي
       updateSavedTotal(month);
 
+      // حفظ في localStorage
+      saveUserData();
+
       // تحديث الواجهة
       refreshUI(month);
     }
@@ -307,10 +441,9 @@
     daySelect.value = '';
   });
 
+  // التحقق من تسجيل الدخول عند تحميل الصفحة
   window.onload = () => {
-    refreshUI();
-  };
-</script>
-
-</body>
-</html>
+    const loggedInUser = sessionStorage.getItem('loggedInUser');
+    if(loggedInUser) {
+      loadUserData(loggedInUser);
+      showDashboard();
