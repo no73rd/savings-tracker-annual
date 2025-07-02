@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>موقع التحويش السنوي</title>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: linear-gradient(145deg, #f0f4f8, #e6f2f2);
+      margin: 0;
+      padding: 20px;
+      direction: rtl;
+      text-align: center;
+    }
+    h1 {
+      color: #00796b;
+      margin-bottom: 10px;
+    }
+    select, input, button {
+      padding: 6px 10px;
+      margin: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    .progress {
+      width: 90%;
+      max-width: 500px;
+      height: 25px;
+      background-color: #ddd;
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 20px auto;
+    }
+    .progress-bar {
+      height: 100%;
+      background-color: #26a69a;
+      width: 0%;
+      transition: width 0.4s ease-in-out;
+    }
+    table {
+      width: 90%;
+      margin: 0 auto;
+      background-color: white;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+    }
+    th {
+      background-color: #80cbc4;
+    }
+    .emoji {
+      font-size: 20px;
+      display: none;
+    }
+    .floating-emoji {
+      position: fixed;
+      font-size: 2.5rem;
+      opacity: 0;
+      animation: floatInOut 1.4s ease-in-out;
+      z-index: 9999;
+      pointer-events: none;
+    }
+    @keyframes floatInOut {
+      0% {opacity: 0; transform: translateY(30px);}
+      30% {opacity: 1; transform: translateY(0);}
+      70% {opacity: 1; transform: translateY(0);}
+      100% {opacity: 0; transform: translateY(-30px);}
+    }
+  </style>
+</head>
+<body>
+  <h1>💰 جدول التحويش السنوي</h1>
+
+  <div>
+    <label>السنة:
+      <select id="yearSelect"></select>
+    </label>
+    <label>الشهر:
+      <select id="monthSelect">
+        <option value="1">يناير</option>
+        <option value="2">فبراير</option>
+        <option value="3">مارس</option>
+        <option value="4">أبريل</option>
+        <option value="5">مايو</option>
+        <option value="6">يونيو</option>
+        <option value="7" selected>يوليو</option>
+        <option value="8">أغسطس</option>
+        <option value="9">سبتمبر</option>
+        <option value="10">أكتوبر</option>
+        <option value="11">نوفمبر</option>
+        <option value="12">ديسمبر</option>
+      </select>
+    </label>
+    <label>المبلغ اليومي:
+      <input type="number" id="amountInput" value="200" />
+    </label>
+    <button onclick="applySettings()">تطبيق</button>
+  </div>
+
+  <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
+
+  <table>
+    <thead><tr><th>اليوم</th><th>تم التحويش؟</th><th>الإجمالي</th></tr></thead>
+    <tbody id="table-body"></tbody>
+  </table>
+
+  <audio id="coin-sound" preload="auto">
+    <source src="https://cdn.pixabay.com/audio/2022/10/26/audio_f02ae93093.mp3" type="audio/mp3">
+  </audio>
+
+  <script>
+    let dailyAmount = 200;
+    const tableBody = document.getElementById('table-body');
+    const progressBar = document.getElementById('progress-bar');
+    const yearSelect = document.getElementById('yearSelect');
+    const monthSelect = document.getElementById('monthSelect');
+    const amountInput = document.getElementById('amountInput');
+    const coinSound = document.getElementById('coin-sound');
+
+    // إعداد السنوات
+    for (let y = 2023; y <= 2035; y++) {
+      let opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = y;
+      yearSelect.appendChild(opt);
+    }
+    yearSelect.value = new Date().getFullYear();
+
+    function getDaysInMonth(month, year) {
+      return new Date(year, month, 0).getDate();
+    }
+
+    function getStorageKey(year, month) {
+      return `saving-${year}-${month}`;
+    }
+
+    function saveData(data) {
+      localStorage.setItem(getStorageKey(yearSelect.value, monthSelect.value), JSON.stringify(data));
+    }
+
+    function loadData() {
+      return JSON.parse(localStorage.getItem(getStorageKey(yearSelect.value, monthSelect.value))) || [];
+    }
+
+    function buildTable() {
+      tableBody.innerHTML = '';
+      const year = parseInt(yearSelect.value);
+      const month = parseInt(monthSelect.value);
+      const days = getDaysInMonth(month, year);
+      const saved = loadData();
+
+      for (let i = 1; i <= days; i++) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>يوم ${i} <span id="emoji-${i}" class="emoji">🎉</span></td>
+          <td><input type="checkbox" ${saved.includes(i) ? 'checked' : ''} onchange="handleCheck(this, ${i})"/></td>
+          <td id="total-${i}">${saved.includes(i) ? i * dailyAmount + ' جنيه' : '-'}</td>
+        `;
+        tableBody.appendChild(row);
+        if (saved.includes(i)) document.getElementById(`emoji-${i}`).style.display = 'inline';
+      }
+      updateProgress();
+    }
+
+    function handleCheck(el, day) {
+      let saved = loadData();
+      if (el.checked) {
+        saved.push(day);
+        try {
+          coinSound.currentTime = 0;
+          coinSound.play().catch(()=>{});
+        } catch(e) {}
+        showFloatingEmojis();
+      } else {
+        saved = saved.filter(d => d !== day);
+      }
+      saveData(saved);
+      buildTable();
+    }
+
+    function updateProgress() {
+      const saved = loadData();
+      const year = parseInt(yearSelect.value);
+      const month = parseInt(monthSelect.value);
+      const totalDays = getDaysInMonth(month, year);
+      const percent = (saved.length / totalDays) * 100;
+      progressBar.style.width = percent + '%';
+    }
+
+    function applySettings() {
+      dailyAmount = parseInt(amountInput.value);
+      buildTable();
+    }
+
+    function showFloatingEmojis() {
+      ['10%', '30%', '70%', '90%'].forEach(pos => {
+        const emoji = document.createElement('div');
+        emoji.className = 'floating-emoji';
+        emoji.textContent = '💸👏';
+        emoji.style.left = pos;
+        emoji.style.top = '40%';
+        document.body.appendChild(emoji);
+        setTimeout(() => document.body.removeChild(emoji), 1400);
+      });
+    }
+
+    buildTable();
+  </script>
+</body>
+</html>
