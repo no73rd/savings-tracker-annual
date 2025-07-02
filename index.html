@@ -2,325 +2,224 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>موقع التحويش</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>موقع التحويش - تسجيل جديد</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: 'Cairo', sans-serif;
       background: linear-gradient(135deg, #e0f2f1, #fce4ec);
-      margin: 0;
-      padding: 0 20px 40px;
+      margin: 0; padding: 20px;
     }
-    .menu-toggle {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 1100;
-      background: #00695c;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 5px;
-      font-size: 18px;
+    .container {
+      max-width: 600px;
+      background: white;
+      padding: 20px 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
-    .sidebar {
-      position: fixed;
-      top: 0;
-      right: -250px;
-      width: 240px;
-      height: 100%;
-      background-color: #004d40;
-      color: white;
-      padding: 20px;
-      transition: right 0.3s ease;
-      z-index: 1050;
-    }
-    .sidebar.active {
-      right: 0;
-    }
-    .sidebar a {
-      display: block;
-      color: white;
-      text-decoration: none;
-      margin-bottom: 15px;
+    label {
       font-weight: bold;
     }
+    button {
+      background-color: #00695c;
+      border: none;
+    }
+    button:hover {
+      background-color: #004d40;
+    }
     .dashboard {
-      margin-top: 80px;
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-    }
-    .dashboard .stat {
-      font-size: 1.1rem;
-      margin-bottom: 10px;
-    }
-    .section {
-      display: none;
-    }
-    .section.active {
-      display: block;
-      margin-top: 20px;
-    }
-    .progress-bar {
-      transition: width 0.5s ease-in-out;
-    }
-    canvas {
-      max-width: 100%;
+      margin-top: 30px;
+      text-align: center;
     }
   </style>
 </head>
 <body>
-  <button class="menu-toggle" onclick="toggleSidebar()">☰ القائمة</button>
-  <div class="sidebar" id="sidebar">
-    <h5>📁 القائمة</h5>
-    <a href="#" onclick="showSection('main')">📅 جدول التحويش</a>
-    <a href="#" onclick="showSection('complete')">✅ الشهور المكتملة</a>
-    <a href="#" onclick="showSection('incomplete')">❌ الشهور غير المكتملة</a>
-    <a href="#" onclick="showSection('progressing')">⏳ الشهور قيد التنفيذ</a>
-    <a href="#" onclick="showSection('transactions')">💳 سجل التحويل</a>
-  </div>
 
   <div class="container">
-    <!-- 🧠 الداشبورد الذكية -->
-    <div class="dashboard text-center">
-      <h3>لوحة التحويش 📊</h3>
-      <div class="row mt-4">
-        <div class="col-md-4 stat text-success" id="stat-complete">✅ شهور مكتملة: 0</div>
-        <div class="col-md-4 stat text-warning" id="stat-progress">⏳ تحت التنفيذ: 0</div>
-        <div class="col-md-4 stat text-danger" id="stat-incomplete">❌ غير مكتملة: 0</div>
+    <h3 class="mb-4 text-center">تسجيل تحويش جديد</h3>
+
+    <form id="savingForm">
+      <div class="mb-3">
+        <label for="monthSelect" class="form-label">اختر الشهر</label>
+        <select id="monthSelect" class="form-select" required>
+          <option value="" disabled selected>اختر الشهر</option>
+          <option value="يناير">يناير</option>
+          <option value="فبراير">فبراير</option>
+          <option value="مارس">مارس</option>
+          <option value="أبريل">أبريل</option>
+          <option value="مايو">مايو</option>
+          <option value="يونيو">يونيو</option>
+          <option value="يوليو">يوليو</option>
+          <option value="أغسطس">أغسطس</option>
+          <option value="سبتمبر">سبتمبر</option>
+          <option value="أكتوبر">أكتوبر</option>
+          <option value="نوفمبر">نوفمبر</option>
+          <option value="ديسمبر">ديسمبر</option>
+        </select>
       </div>
-      <canvas id="progressChart" height="100"></canvas>
-    </div>
 
-    <!-- جدول التحويش -->
-    <div id="main" class="section active">
-      <h4>جدول التحويش الشهري</h4>
-      <table class="table table-bordered table-striped mt-3">
-        <thead class="table-light">
-          <tr>
-            <th>الشهر</th>
-            <th>الحالة</th>
-            <th>المبلغ المحوّش</th>
-            <th>الهدف</th>
-            <th>النسبة</th>
-          </tr>
-        </thead>
-        <tbody id="savingsTableBody"></tbody>
-      </table>
-    </div>
+      <div class="mb-3">
+        <label for="daySelect" class="form-label">اختر اليوم</label>
+        <select id="daySelect" class="form-select" required>
+          <option value="" disabled selected>اختر اليوم</option>
+        </select>
+      </div>
 
-    <!-- الشهور المكتملة -->
-    <div id="complete" class="section">
-      <h4>الشهور المكتملة</h4>
-      <ul id="completeList" class="list-group mt-3"></ul>
-    </div>
+      <div class="mb-3">
+        <label for="amountInput" class="form-label">المبلغ المحوّش (جنيه)</label>
+        <input type="number" id="amountInput" class="form-control" min="0" step="1" required />
+      </div>
 
-    <!-- الشهور غير المكتملة -->
-    <div id="incomplete" class="section">
-      <h4>الشهور غير المكتملة</h4>
-      <ul id="incompleteList" class="list-group mt-3"></ul>
-    </div>
+      <div class="mb-3">
+        <label for="goalInput" class="form-label">الهدف الشهري (جنيه)</label>
+        <input type="number" id="goalInput" class="form-control" min="1" step="1" value="1000" required />
+      </div>
 
-    <!-- الشهور قيد التنفيذ -->
-    <div id="progressing" class="section">
-      <h4>الشهور قيد التنفيذ</h4>
-      <ul id="progressingList" class="list-group mt-3"></ul>
-    </div>
+      <button type="submit" class="btn btn-success w-100">حفظ التحويش</button>
+    </form>
 
-    <!-- سجل التحويل -->
-    <div id="transactions" class="section">
-      <h4>سجل التحويل</h4>
-      <ul id="transactionsList" class="list-group mt-3"></ul>
+    <div class="dashboard">
+      <h4 class="mt-4">إحصائيات التحويش</h4>
+      <p id="statsComplete">✅ شهور مكتملة: 0</p>
+      <p id="statsProgress">⏳ تحت التنفيذ: 0</p>
+      <p id="statsIncomplete">❌ غير مكتملة: 0</p>
+      <canvas id="progressChart" height="120"></canvas>
     </div>
   </div>
 
-  <script>
-    // بيانات التحويش الشهرية مصفرة
-    const savingsData = [
-      { month: 'يناير', saved: 0, goal: 1000 },
-      { month: 'فبراير', saved: 0, goal: 1000 },
-      { month: 'مارس', saved: 0, goal: 1000 },
-      { month: 'أبريل', saved: 0, goal: 1000 },
-      { month: 'مايو', saved: 0, goal: 1000 },
-      { month: 'يونيو', saved: 0, goal: 1000 },
-      { month: 'يوليو', saved: 0, goal: 1000 },
-      { month: 'أغسطس', saved: 0, goal: 1000 },
-      { month: 'سبتمبر', saved: 0, goal: 1000 },
-      { month: 'أكتوبر', saved: 0, goal: 1000 },
-      { month: 'نوفمبر', saved: 0, goal: 1000 },
-      { month: 'ديسمبر', saved: 0, goal: 1000 },
-    ];
+<script>
+  // تهيئة بيانات الشهور بدون مبالغ، والهدف مبدئي 1000 لكل شهر
+  const savingsData = [
+    { month: 'يناير', saved: 0, goal: 1000 },
+    { month: 'فبراير', saved: 0, goal: 1000 },
+    { month: 'مارس', saved: 0, goal: 1000 },
+    { month: 'أبريل', saved: 0, goal: 1000 },
+    { month: 'مايو', saved: 0, goal: 1000 },
+    { month: 'يونيو', saved: 0, goal: 1000 },
+    { month: 'يوليو', saved: 0, goal: 1000 },
+    { month: 'أغسطس', saved: 0, goal: 1000 },
+    { month: 'سبتمبر', saved: 0, goal: 1000 },
+    { month: 'أكتوبر', saved: 0, goal: 1000 },
+    { month: 'نوفمبر', saved: 0, goal: 1000 },
+    { month: 'ديسمبر', saved: 0, goal: 1000 },
+  ];
 
-    // سجل التحويل فاضي
-    const transactions = [];
+  const monthNames = savingsData.map(s => s.month);
 
-    // دالة لتحديد حالة الشهر بناء على saved و goal
-    function getStatus(saved, goal) {
-      if (saved >= goal) return 'مكتملة';
-      if (saved === 0) return 'غير مكتملة';
-      return 'قيد التنفيذ';
+  // تعبئة اختيار اليوم (1 - 31)
+  const daySelect = document.getElementById('daySelect');
+  for(let d=1; d<=31; d++) {
+    const opt = document.createElement('option');
+    opt.value = d;
+    opt.textContent = d;
+    daySelect.appendChild(opt);
+  }
+
+  // دالة لتحديد حالة الشهر
+  function getStatus(saved, goal) {
+    if (saved >= goal) return 'مكتملة';
+    if (saved === 0) return 'غير مكتملة';
+    return 'قيد التنفيذ';
+  }
+
+  // الرسم البياني
+  let chartInstance = null;
+  function updateChart() {
+    const ctx = document.getElementById('progressChart').getContext('2d');
+    const labels = savingsData.map(s => s.month);
+    const data = savingsData.map(s => Math.min(100, (s.saved / s.goal) * 100));
+
+    if(chartInstance) {
+      chartInstance.data.labels = labels;
+      chartInstance.data.datasets[0].data = data;
+      chartInstance.update();
+      return;
     }
 
-    // دالة لتحديث الجدول والقوائم والداشبورد
-    function updateDashboard() {
-      const tbody = document.getElementById('savingsTableBody');
-      const completeList = document.getElementById('completeList');
-      const incompleteList = document.getElementById('incompleteList');
-      const progressingList = document.getElementById('progressingList');
-      const transactionsList = document.getElementById('transactionsList');
-
-      tbody.innerHTML = '';
-      completeList.innerHTML = '';
-      incompleteList.innerHTML = '';
-      progressingList.innerHTML = '';
-      transactionsList.innerHTML = '';
-
-      let completeCount = 0, incompleteCount = 0, progressCount = 0;
-      let chartLabels = [];
-      let chartData = [];
-
-      savingsData.forEach(({ month, saved, goal }) => {
-        const status = getStatus(saved, goal);
-        const percent = Math.min(100, (saved / goal) * 100).toFixed(1);
-
-        // إضافة صف الجدول
-        tbody.innerHTML += `
-          <tr>
-            <td>${month}</td>
-            <td>${status}</td>
-            <td>${saved.toLocaleString()} ج</td>
-            <td>${goal.toLocaleString()} ج</td>
-            <td>
-              <div class="progress">
-                <div class="progress-bar ${status === 'مكتملة' ? 'bg-success' : status === 'قيد التنفيذ' ? 'bg-warning' : 'bg-danger'}" 
-                     role="progressbar" 
-                     style="width: ${percent}%;" 
-                     aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100">${percent}%</div>
-              </div>
-            </td>
-          </tr>
-        `;
-
-        // إضافة القوائم حسب الحالة
-        if (status === 'مكتملة') {
-          completeList.innerHTML += `<li class="list-group-item list-group-item-success">${month} - ${saved.toLocaleString()} ج</li>`;
-          completeCount++;
-        } else if (status === 'غير مكتملة') {
-          incompleteList.innerHTML += `<li class="list-group-item list-group-item-danger">${month} - ${saved.toLocaleString()} ج</li>`;
-          incompleteCount++;
-        } else {
-          progressingList.innerHTML += `<li class="list-group-item list-group-item-warning">${month} - ${saved.toLocaleString()} ج</li>`;
-          progressCount++;
-        }
-
-        chartLabels.push(month);
-        chartData.push(percent);
-      });
-
-      // تحديث الإحصائيات النصية
-      document.getElementById('stat-complete').textContent = `✅ شهور مكتملة: ${completeCount}`;
-      document.getElementById('stat-incomplete').textContent = `❌ غير مكتملة: ${incompleteCount}`;
-      document.getElementById('stat-progress').textContent = `⏳ تحت التنفيذ: ${progressCount}`;
-
-      // تحديث سجل التحويل
-      transactions.forEach(({ date, amount, month }) => {
-        transactionsList.innerHTML += `<li class="list-group-item">${date} - ${month} - ${amount.toLocaleString()} ج</li>`;
-      });
-
-      // تحديث الرسم البياني
-      updateChart(chartLabels, chartData);
-    }
-
-    let chartInstance = null;
-    function updateChart(labels, data) {
-      const ctx = document.getElementById('progressChart').getContext('2d');
-
-      if (chartInstance) {
-        chartInstance.data.labels = labels;
-        chartInstance.data.datasets[0].data = data;
-        chartInstance.update();
-        return;
-      }
-
-      chartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'نسبة التحويش الشهري (%)',
-            data: data,
-            backgroundColor: data.map(p => p >= 100 ? '#4caf50' : p > 0 ? '#ffca28' : '#f44336'),
-            borderRadius: 5,
-          }]
+    chartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'نسبة التحويش الشهري (%)',
+          data,
+          backgroundColor: data.map(p => p >= 100 ? '#4caf50' : p > 0 ? '#ffca28' : '#f44336'),
+          borderRadius: 5,
+        }]
+      },
+      options: {
+        indexAxis: 'x',
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 110,
+            ticks: { callback: v => v + '%' }
+          }
         },
-        options: {
-          indexAxis: 'x',
-          scales: {
-            y: {
-              beginAtZero: true,
-              max: 110,
-              ticks: {
-                callback: v => v + '%'
-              }
-            }
-          },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: ctx => ctx.parsed.y + '% مكتمل'
-              }
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ctx.parsed.y + '% مكتمل'
             }
           }
         }
-      });
-    }
-
-    // تشغيل الأصوات (تنبيه)
-    const audioSuccess = new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
-    const audioWarning = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
-
-    function playSound(status) {
-      if (status === 'مكتملة') {
-        audioSuccess.play();
-      } else if (status === 'قيد التنفيذ') {
-        audioWarning.play();
       }
+    });
+  }
+
+  // تحديث الإحصائيات
+  function updateStats() {
+    const completeCount = savingsData.filter(s => s.saved >= s.goal).length;
+    const incompleteCount = savingsData.filter(s => s.saved === 0).length;
+    const progressCount = savingsData.length - completeCount - incompleteCount;
+
+    document.getElementById('statsComplete').textContent = `✅ شهور مكتملة: ${completeCount}`;
+    document.getElementById('statsIncomplete').textContent = `❌ غير مكتملة: ${incompleteCount}`;
+    document.getElementById('statsProgress').textContent = `⏳ تحت التنفيذ: ${progressCount}`;
+  }
+
+  // تحديث الواجهة كاملة
+  function refreshUI() {
+    updateStats();
+    updateChart();
+  }
+
+  // معالجة النموذج عند الحفظ
+  document.getElementById('savingForm').addEventListener('submit', e => {
+    e.preventDefault();
+
+    const month = document.getElementById('monthSelect').value;
+    const day = parseInt(document.getElementById('daySelect').value);
+    const amount = parseFloat(document.getElementById('amountInput').value);
+    const goal = parseFloat(document.getElementById('goalInput').value);
+
+    if(!month || !day || isNaN(amount) || isNaN(goal) || goal <= 0) {
+      alert('يرجى تعبئة جميع الحقول بشكل صحيح');
+      return;
     }
 
-    // تفعيل عرض الأقسام وتحديث البيانات
-    function showSection(id) {
-      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-      toggleSidebar(false);
+    // تحديث بيانات الشهر المختار
+    const monthData = savingsData.find(s => s.month === month);
+    if(monthData) {
+      monthData.saved = amount;
+      monthData.goal = goal;
+      // ممكن تخزن اليوم لو حبيت - حاليًا مش مخزن
     }
 
-    // عرض وإخفاء القائمة الجانبية
-    function toggleSidebar(forceClose) {
-      const sidebar = document.getElementById('sidebar');
-      if(forceClose === true) {
-        sidebar.classList.remove('active');
-        return;
-      }
-      sidebar.classList.toggle('active');
-    }
+    refreshUI();
 
-    // تحديث الداشبورد عند تحميل الصفحة
-    window.onload = () => {
-      updateDashboard();
+    alert(`تم تسجيل ${amount.toLocaleString()} جنيه لشهر ${month} بتاريخ يوم ${day}`);
+    e.target.reset();
+  });
 
-      // ممكن تشغل صوت عند أي تحديث أو حسب الحالة هنا
-      savingsData.forEach(({ saved, goal }) => {
-        const status = getStatus(saved, goal);
-        if(status === 'مكتملة' || status === 'قيد التنفيذ') {
-          playSound(status);
-        }
-      });
-    };
-  </script>
+  // أول تحميل الصفحة
+  window.onload = () => {
+    refreshUI();
+  };
+</script>
+
 </body>
 </html>
