@@ -95,7 +95,8 @@
       </div>
       <canvas id="progressChart" height="100"></canvas>
     </div>
-    
+
+    <!-- جدول التحويش -->
     <div id="main" class="section active">
       <h4>جدول التحويش الشهري</h4>
       <table class="table table-bordered table-striped mt-3">
@@ -138,29 +139,24 @@
   </div>
 
   <script>
-    // بيانات التحويش الشهرية
+    // بيانات التحويش الشهرية مصفرة
     const savingsData = [
-      { month: 'يناير', saved: 1000, goal: 1000 },
-      { month: 'فبراير', saved: 750, goal: 1000 },
-      { month: 'مارس', saved: 400, goal: 1000 },
-      { month: 'أبريل', saved: 1000, goal: 1000 },
-      { month: 'مايو', saved: 900, goal: 1000 },
+      { month: 'يناير', saved: 0, goal: 1000 },
+      { month: 'فبراير', saved: 0, goal: 1000 },
+      { month: 'مارس', saved: 0, goal: 1000 },
+      { month: 'أبريل', saved: 0, goal: 1000 },
+      { month: 'مايو', saved: 0, goal: 1000 },
       { month: 'يونيو', saved: 0, goal: 1000 },
-      { month: 'يوليو', saved: 300, goal: 1000 },
-      { month: 'أغسطس', saved: 1000, goal: 1000 },
-      { month: 'سبتمبر', saved: 500, goal: 1000 },
-      { month: 'أكتوبر', saved: 1000, goal: 1000 },
-      { month: 'نوفمبر', saved: 1000, goal: 1000 },
-      { month: 'ديسمبر', saved: 1000, goal: 1000 },
+      { month: 'يوليو', saved: 0, goal: 1000 },
+      { month: 'أغسطس', saved: 0, goal: 1000 },
+      { month: 'سبتمبر', saved: 0, goal: 1000 },
+      { month: 'أكتوبر', saved: 0, goal: 1000 },
+      { month: 'نوفمبر', saved: 0, goal: 1000 },
+      { month: 'ديسمبر', saved: 0, goal: 1000 },
     ];
 
-    // سجل التحويل (مثال)
-    const transactions = [
-      { date: '2025-01-05', amount: 1000, month: 'يناير' },
-      { date: '2025-02-10', amount: 750, month: 'فبراير' },
-      { date: '2025-03-15', amount: 400, month: 'مارس' },
-      // أضف معاملات أخرى حسب الحاجة
-    ];
+    // سجل التحويل فاضي
+    const transactions = [];
 
     // دالة لتحديد حالة الشهر بناء على saved و goal
     function getStatus(saved, goal) {
