@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>موقع التحويش مع تسجيل دخول</title>
+<title>موقع التحويش الرسمي - Firebase</title>
 <style>
   body { font-family: 'Cairo', sans-serif; background:#eef; padding: 20px; }
   .container { max-width: 520px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1);}
@@ -30,7 +30,6 @@
     cursor:pointer;
     transition: all 0.3s ease;
   }
-  /* تأثير التوهج عند اختيار اليوم */
   .checkmark.animate {
     animation: glow 0.7s ease forwards;
   }
@@ -53,34 +52,22 @@
 </head>
 <body>
 
-<!-- تسجيل الدخول -->
-<div class="container" id="loginSection">
-  <h2>تسجيل الدخول</h2>
-  <form id="loginForm">
-    <input type="text" id="loginUsername" placeholder="اسم المستخدم" required autocomplete="username" />
-    <input type="password" id="loginPassword" placeholder="كلمة المرور" required autocomplete="current-password" />
-    <button type="submit">دخول</button>
+<div class="container" id="authSection">
+  <h2 id="authTitle">تسجيل الدخول</h2>
+
+  <form id="authForm">
+    <input type="email" id="emailInput" placeholder="البريد الإلكتروني" required autocomplete="username" />
+    <input type="password" id="passwordInput" placeholder="كلمة المرور" required autocomplete="current-password" />
+    <button type="submit" id="authButton">دخول</button>
   </form>
-  <div class="link" id="toRegister">ليس لديك حساب؟ سجل هنا</div>
+  <div class="link" id="toggleAuth">ليس لديك حساب؟ سجل هنا</div>
 </div>
 
-<!-- تسجيل حساب جديد -->
-<div class="container hidden" id="registerSection">
-  <h2>إنشاء حساب جديد</h2>
-  <form id="registerForm">
-    <input type="text" id="registerUsername" placeholder="اسم المستخدم" required autocomplete="username" />
-    <input type="password" id="registerPassword" placeholder="كلمة المرور" required autocomplete="new-password" />
-    <button type="submit">تسجيل</button>
-  </form>
-  <div class="link" id="toLogin">لديك حساب؟ سجل الدخول</div>
-</div>
-
-<!-- صفحة التحويش -->
 <div class="container hidden" id="dashboardSection">
 
   <button id="logoutBtn">تسجيل خروج</button>
 
-  <h2>موقع التحويش</h2>
+  <h2>موقع التحويش الرسمي</h2>
 
   <label for="yearSelect">اختر السنة:</label>
   <select id="yearSelect"></select>
@@ -105,42 +92,45 @@
   </table>
 </div>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <script>
-  // دوال المستخدمين والتخزين
-  function getUsers() {
-    const data = localStorage.getItem('users');
-    return data ? JSON.parse(data) : {};
-  }
-  function saveUsers(users) {
-    localStorage.setItem('users', JSON.stringify(users));
-  }
-  function hashPassword(pwd) {
-    return btoa(pwd);
-  }
+  // إعدادات Firebase الخاصة بك
+  const firebaseConfig = {
+    apiKey: "AIzaSyBwyZ-s1kbwQ5eXEP2Sn5vSWQvMuwvatMA",
+    authDomain: "saver-abb7a.firebaseapp.com",
+    projectId: "saver-abb7a",
+    storageBucket: "saver-abb7a.firebasestorage.app",
+    messagingSenderId: "1053395200635",
+    appId: "1:1053395200635:web:116749d7c4f0be4d3710de",
+    measurementId: "G-2V0GHBT5HB"
+  };
 
-  // عناصر HTML
-  const loginSection = document.getElementById('loginSection');
-  const registerSection = document.getElementById('registerSection');
+  firebase.initializeApp(firebaseConfig);
+
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  // عناصر DOM
+  const authSection = document.getElementById('authSection');
   const dashboardSection = document.getElementById('dashboardSection');
-
-  const loginForm = document.getElementById('loginForm');
-  const registerForm = document.getElementById('registerForm');
-
-  const toRegister = document.getElementById('toRegister');
-  const toLogin = document.getElementById('toLogin');
+  const authForm = document.getElementById('authForm');
+  const emailInput = document.getElementById('emailInput');
+  const passwordInput = document.getElementById('passwordInput');
+  const authButton = document.getElementById('authButton');
+  const toggleAuth = document.getElementById('toggleAuth');
+  const authTitle = document.getElementById('authTitle');
 
   const logoutBtn = document.getElementById('logoutBtn');
-
   const yearSelect = document.getElementById('yearSelect');
   const monthSelect = document.getElementById('monthSelect');
   const dailyAmountInput = document.getElementById('dailyAmountInput');
   const saveDailyAmountBtn = document.getElementById('saveDailyAmountBtn');
   const daysTableBody = document.getElementById('daysTableBody');
   const monthlyGoalDiv = document.getElementById('monthlyGoal');
-
-  // بيانات ومتغيرات
-  let currentUser = null;
-  let savingsData = null;
 
   const months = [
     'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
@@ -153,14 +143,23 @@
     'سبتمبر': 30, 'أكتوبر': 31, 'نوفمبر': 30, 'ديسمبر': 31
   };
 
-  // تبديل بين التسجيل والدخول
-  toRegister.onclick = () => {
-    loginSection.classList.add('hidden');
-    registerSection.classList.remove('hidden');
-  };
-  toLogin.onclick = () => {
-    registerSection.classList.add('hidden');
-    loginSection.classList.remove('hidden');
+  let isLogin = true; // حالة: تسجيل دخول أو تسجيل حساب جديد
+  let currentUser = null;
+
+  // تغيير بين تسجيل دخول وتسجيل حساب جديد
+  toggleAuth.onclick = () => {
+    isLogin = !isLogin;
+    if (isLogin) {
+      authTitle.textContent = 'تسجيل الدخول';
+      authButton.textContent = 'دخول';
+      toggleAuth.textContent = 'ليس لديك حساب؟ سجل هنا';
+      passwordInput.autocomplete = 'current-password';
+    } else {
+      authTitle.textContent = 'إنشاء حساب جديد';
+      authButton.textContent = 'تسجيل';
+      toggleAuth.textContent = 'لديك حساب؟ سجل الدخول';
+      passwordInput.autocomplete = 'new-password';
+    }
   };
 
   // تهيئة قوائم السنة والشهر
@@ -184,30 +183,38 @@
     });
   }
 
-  // تحقق سنة كبيسة
+  // سنة كبيسة
   function isLeapYear(year) {
     return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
   }
 
-  // تحميل بيانات المستخدم أو انشائها لو مش موجودة
-  function loadUserData(username) {
-    currentUser = username;
-    const users = getUsers();
-    if (!users[username].savingsData) {
-      users[username].savingsData = {};
+  // تحميل بيانات التحويش من Firestore
+  async function loadSavingsData(uid) {
+    try {
+      const docRef = db.collection('savings').doc(uid);
+      const doc = await docRef.get();
+      if (doc.exists) {
+        return doc.data();
+      } else {
+        return {}; // بيانات جديدة
+      }
+    } catch (error) {
+      console.error("خطأ في تحميل البيانات:", error);
+      return {};
     }
-    savingsData = users[username].savingsData;
   }
 
-  // حفظ بيانات المستخدم
-  function saveUserData() {
-    const users = getUsers();
-    users[currentUser].savingsData = savingsData;
-    saveUsers(users);
+  // حفظ بيانات التحويش في Firestore
+  async function saveSavingsData(uid, data) {
+    try {
+      await db.collection('savings').doc(uid).set(data);
+    } catch (error) {
+      console.error("خطأ في حفظ البيانات:", error);
+    }
   }
 
-  // تحديث الجدول مع التأثيرات
-  function updateDaysTable() {
+  // تحديث الجدول مع تأثيرات
+  async function updateDaysTable() {
     daysTableBody.innerHTML = '';
     if (!currentUser) return;
     const year = yearSelect.value;
@@ -217,15 +224,14 @@
     let daysCount = daysInMonth[month];
     if (month === 'فبراير' && isLeapYear(parseInt(year))) daysCount = 29;
 
-    if (!savingsData[year]) savingsData[year] = {};
-    if (!savingsData[year][month]) {
-      savingsData[year][month] = { dailyAmount: 0, daysSaved: {} };
+    if (!currentUserData[year]) currentUserData[year] = {};
+    if (!currentUserData[year][month]) {
+      currentUserData[year][month] = { dailyAmount: 0, daysSaved: {} };
     }
 
-    dailyAmountInput.value = savingsData[year][month].dailyAmount || '';
+    dailyAmountInput.value = currentUserData[year][month].dailyAmount || '';
 
-    // حساب الهدف الشهري تلقائياً
-    const monthlyGoal = (savingsData[year][month].dailyAmount || 0) * daysCount;
+    const monthlyGoal = (currentUserData[year][month].dailyAmount || 0) * daysCount;
     monthlyGoalDiv.textContent = `الهدف الشهري: ${monthlyGoal} جنيه`;
 
     for(let day = 1; day <= daysCount; day++) {
@@ -236,24 +242,22 @@
       tr.appendChild(tdDay);
 
       const tdCheck = document.createElement('td');
-      const isSaved = savingsData[year][month].daysSaved[day];
+      const isSaved = currentUserData[year][month].daysSaved[day];
       tdCheck.innerHTML = isSaved ? '<span class="checkmark">✓</span>' : '<span class="no-mark">–</span>';
 
-      // تأثير بسيط عند الضغط على العلامة
-      tdCheck.onclick = () => {
-        if (savingsData[year][month].dailyAmount <= 0) {
+      tdCheck.onclick = async () => {
+        if (currentUserData[year][month].dailyAmount <= 0) {
           alert('يرجى تحديد المبلغ اليومي أولاً');
           return;
         }
-        if (savingsData[year][month].daysSaved[day]) {
-          delete savingsData[year][month].daysSaved[day];
+        if (currentUserData[year][month].daysSaved[day]) {
+          delete currentUserData[year][month].daysSaved[day];
         } else {
-          savingsData[year][month].daysSaved[day] = true;
+          currentUserData[year][month].daysSaved[day] = true;
         }
-        saveUserData();
-        updateDaysTable();
+        await saveSavingsData(currentUser.uid, currentUserData);
+        await updateDaysTable();
 
-        // تأثير توهج على العلامة بعد التحديث
         const checkSpan = tdCheck.querySelector('span');
         checkSpan.classList.add('animate');
         setTimeout(() => {
@@ -267,7 +271,7 @@
   }
 
   // حفظ المبلغ اليومي
-  saveDailyAmountBtn.onclick = () => {
+  saveDailyAmountBtn.onclick = async () => {
     const year = yearSelect.value;
     const month = monthSelect.value;
     const amount = parseFloat(dailyAmountInput.value);
@@ -279,119 +283,77 @@
       alert('يرجى إدخال مبلغ يومي صالح');
       return;
     }
-    if (!savingsData[year]) savingsData[year] = {};
-    if (!savingsData[year][month]) savingsData[year][month] = { dailyAmount: 0, daysSaved: {} };
-    savingsData[year][month].dailyAmount = amount;
-    saveUserData();
+    if (!currentUserData[year]) currentUserData[year] = {};
+    if (!currentUserData[year][month]) currentUserData[year][month] = { dailyAmount: 0, daysSaved: {} };
+    currentUserData[year][month].dailyAmount = amount;
+    await saveSavingsData(currentUser.uid, currentUserData);
     alert('تم حفظ المبلغ اليومي');
-    updateDaysTable();
+    await updateDaysTable();
   };
 
-  // تسجيل خروج
-  logoutBtn.onclick = () => {
-    currentUser = null;
-    savingsData = null;
-    sessionStorage.removeItem('loggedInUser');
-    dashboardSection.classList.add('hidden');
-    loginSection.classList.remove('hidden');
-  };
+  // بيانات المستخدم الحالية من Firestore
+  let currentUserData = {};
 
-  // تسجيل دخول
-  const loginUsername = document.getElementById('loginUsername');
-  const loginPassword = document.getElementById('loginPassword');
-
-  loginForm.addEventListener('submit', e => {
-    e.preventDefault();
-    const username = loginUsername.value.trim();
-    const password = loginPassword.value;
-
-    const users = getUsers();
-    if (!users[username] || users[username].password !== hashPassword(password)) {
-      alert('اسم المستخدم أو كلمة المرور غير صحيحة');
-      return;
-    }
-
-    sessionStorage.setItem('loggedInUser', username);
-    loadUserData(username);
-
-    loginSection.classList.add('hidden');
-    registerSection.classList.add('hidden');
-    dashboardSection.classList.remove('hidden');
-
-    fillYearSelect();
-    fillMonthSelect();
-
-    yearSelect.value = new Date().getFullYear();
-    monthSelect.value = months[new Date().getMonth()];
-    updateDaysTable();
-
-    loginForm.reset();
-  });
-
-  // تسجيل حساب جديد
-  const registerUsername = document.getElementById('registerUsername');
-  const registerPassword = document.getElementById('registerPassword');
-
-  registerForm.addEventListener('submit', e => {
-    e.preventDefault();
-    const username = registerUsername.value.trim();
-    const password = registerPassword.value;
-
-    if (!username || !password) {
-      alert('يرجى تعبئة جميع الحقول');
-      return;
-    }
-
-    const users = getUsers();
-    if (users.hasOwnProperty(username)) {
-      alert('اسم المستخدم موجود مسبقًا');
-      return;
-    }
-
-    users[username] = {
-      password: hashPassword(password),
-      savingsData: {}
-    };
-
-    saveUsers(users);
-
-    alert('تم إنشاء الحساب بنجاح، يمكنك تسجيل الدخول الآن');
-
-    registerSection.classList.add('hidden');
-    loginSection.classList.remove('hidden');
-
-    registerForm.reset();
-  });
-
-  // عند تحميل الصفحة، إذا فيه مستخدم مسجل دخول يسترجع بياناته
-  window.addEventListener('load', () => {
-    const savedUser = sessionStorage.getItem('loggedInUser');
-    if (savedUser) {
-      loadUserData(savedUser);
-      loginSection.classList.add('hidden');
-      registerSection.classList.add('hidden');
+  // استماع لحالة تسجيل الدخول
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      currentUser = user;
+      authSection.classList.add('hidden');
       dashboardSection.classList.remove('hidden');
-
       fillYearSelect();
       fillMonthSelect();
+
+      currentUserData = await loadSavingsData(currentUser.uid);
 
       yearSelect.value = new Date().getFullYear();
       monthSelect.value = months[new Date().getMonth()];
       updateDaysTable();
     } else {
-      fillYearSelect();
-      fillMonthSelect();
+      currentUser = null;
+      authSection.classList.remove('hidden');
+      dashboardSection.classList.add('hidden');
     }
   });
 
-  // تحديث الجدول عند تغيير السنة أو الشهر
-  yearSelect.onchange = updateDaysTable;
-  monthSelect.onchange = updateDaysTable;
+  // التعامل مع نموذج تسجيل الدخول والتسجيل
+  authForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
 
-  // دالة تجزئة كلمة المرور بطريقة بسيطة (Base64)
-  function hashPassword(pwd) {
-    return btoa(pwd);
-  }
+    try {
+      if (isLogin) {
+        await auth.signInWithEmailAndPassword(email, password);
+      } else {
+        await auth.createUserWithEmailAndPassword(email, password);
+        alert('تم إنشاء الحساب بنجاح');
+      }
+      authForm.reset();
+    } catch (error) {
+      alert(error.message);
+    }
+  });
+
+  // تبديل حالة تسجيل الدخول والتسجيل
+  toggleAuth.onclick = () => {
+    isLogin = !isLogin;
+    if (isLogin) {
+      authTitle.textContent = 'تسجيل الدخول';
+      authButton.textContent = 'دخول';
+      toggleAuth.textContent = 'ليس لديك حساب؟ سجل هنا';
+      passwordInput.autocomplete = 'current-password';
+    } else {
+      authTitle.textContent = 'إنشاء حساب جديد';
+      authButton.textContent = 'تسجيل';
+      toggleAuth.textContent = 'لديك حساب؟ سجل الدخول';
+      passwordInput.autocomplete = 'new-password';
+    }
+  };
+
+  // تسجيل خروج
+  logoutBtn.onclick = () => {
+    auth.signOut();
+  };
 </script>
 
 </body>
