@@ -1,134 +1,290 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>موقع التحويش</title>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-  <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background: linear-gradient(135deg, #e0f2f1, #fce4ec);
-      padding: 30px;
-      text-align: center;
-    }
-    .box {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 500px;
-      margin: auto;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      margin-top: 20px;
-    }
-    input, button {
-      margin: 5px;
-      padding: 10px;
-      width: 90%;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>موقع التحويش الرسمي - Firebase</title>
+<style>
+  body { font-family: 'Cairo', sans-serif; background:#eef; padding: 20px; }
+  .container { max-width: 520px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1);}
+  input, select, button { width: 100%; margin: 10px 0; padding: 8px; font-size: 16px; border-radius: 6px; border: 1px solid #ccc; }
+  button { cursor: pointer; background: #00695c; color: white; border: none; }
+  button:hover { background: #004d40; }
+  .hidden { display: none !important; }
+  .link { color: #00695c; cursor: pointer; text-align: center; margin-top: 10px; user-select:none; }
+  table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+  th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+  th { background-color: #00695c; color: white; }
+  .checkmark {
+    color: green;
+    font-weight: bold;
+    font-size: 1.3em;
+    user-select:none;
+    cursor:pointer;
+    transition: all 0.3s ease;
+  }
+  .no-mark {
+    color: #bbb;
+    font-size: 1.3em;
+    user-select:none;
+    cursor:pointer;
+    transition: all 0.3s ease;
+  }
+  .checkmark.animate {
+    animation: glow 0.7s ease forwards;
+  }
+  @keyframes glow {
+    0% { text-shadow: 0 0 5px #4caf50; transform: scale(1); }
+    50% { text-shadow: 0 0 15px #4caf50; transform: scale(1.3); }
+    100% { text-shadow: 0 0 5px #4caf50; transform: scale(1); }
+  }
+  #logoutBtn { background-color: #c62828; margin-bottom: 20px; }
+  #logoutBtn:hover { background-color: #8e0000; }
+  #monthlyGoal, #monthlySaved, #monthlyRemaining {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-top: -6px;
+    margin-bottom: 8px;
+    color: #004d40;
+    user-select: none;
+  }
+</style>
 </head>
 <body>
 
-  <!-- تسجيل الدخول / إنشاء حساب -->
-  <div class="box">
-    <h2>تسجيل الدخول / إنشاء حساب</h2>
-    <input type="email" id="email" placeholder="البريد الإلكتروني"><br>
-    <input type="password" id="password" placeholder="كلمة المرور"><br>
-    <button onclick="register()">إنشاء حساب</button>
-    <button onclick="login()">تسجيل الدخول</button>
-    <p id="msg"></p>
-  </div>
+<div class="container" id="authSection">
+  <h2 id="authTitle">تسجيل الدخول</h2>
+  <form id="authForm">
+    <input type="email" id="emailInput" placeholder="البريد الإلكتروني" required autocomplete="username" />
+    <input type="password" id="passwordInput" placeholder="كلمة المرور" required autocomplete="current-password" />
+    <button type="submit" id="authButton">دخول</button>
+  </form>
+  <div class="link" id="toggleAuth">ليس لديك حساب؟ سجل هنا</div>
+</div>
 
-  <!-- واجهة الهدف والمبلغ المحوش -->
-  <div class="box" id="progressBox" style="display: none;">
-    <h3>🎯 الهدف الشهري: <span id="monthly-goal">0</span> جنيه</h3>
-    <h4>💰 المحوش حتى الآن: <span id="saved-amount">0</span> جنيه</h4>
-    <h4>⏳ المتبقي: <span id="remaining">0</span> جنيه</h4>
-    <button onclick="markSaved()">✔️ تم التحويش اليوم</button>
-  </div>
+<div class="container hidden" id="dashboardSection">
+  <button id="logoutBtn">تسجيل خروج</button>
+  <h2>موقع التحويش الرسمي</h2>
 
-  <!-- إعدادات Firebase -->
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBwyZ-s1kbwQ5eXEP2Sn5vSWQvMuwvatMA",
-      authDomain: "saver-abb7a.firebaseapp.com",
-      projectId: "saver-abb7a",
-      storageBucket: "saver-abb7a.appspot.com",
-      messagingSenderId: "1053395200635",
-      appId: "1:1053395200635:web:116749d7c4f0be4d3710de",
-      measurementId: "G-2V0GHBT5HB"
-    };
+  <label for="yearSelect">اختر السنة:</label>
+  <select id="yearSelect"></select>
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+  <label for="monthSelect">اختر الشهر:</label>
+  <select id="monthSelect"></select>
 
-    // بيانات التحويش
-    let dailyAmount = 100; // ← تقدر تخليه يتغير من المستخدم
-    let totalDays = 30;
-    let savedDays = 0;
-    let userId = null;
+  <label for="dailyAmountInput">المبلغ اليومي (جنيه):</label>
+  <input type="number" id="dailyAmountInput" min="1" step="1" placeholder="حدد المبلغ اليومي" />
+  
+  <div id="monthlyGoal">🎯 الهدف الشهري: 0 جنيه</div>
+  <div id="monthlySaved">💰 المحوش حتى الآن: 0 جنيه</div>
+  <div id="monthlyRemaining">⏳ المتبقي: 0 جنيه</div>
 
-    // تحديث الواجهة
-    function updateProgressBox() {
-      const goal = dailyAmount * totalDays;
-      const saved = dailyAmount * savedDays;
-      const remaining = goal - saved;
+  <button id="saveDailyAmountBtn">حفظ المبلغ الشهري</button>
 
-      document.getElementById("monthly-goal").textContent = goal;
-      document.getElementById("saved-amount").textContent = saved;
-      document.getElementById("remaining").textContent = remaining;
+  <table>
+    <thead>
+      <tr>
+        <th>اليوم</th>
+        <th>تم التحويش؟</th>
+      </tr>
+    </thead>
+    <tbody id="daysTableBody"></tbody>
+  </table>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+  // إعدادات Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyBwyZ-s1kbwQ5eXEP2Sn5vSWQvMuwvatMA",
+    authDomain: "saver-abb7a.firebaseapp.com",
+    projectId: "saver-abb7a",
+    storageBucket: "saver-abb7a.appspot.com",
+    messagingSenderId: "1053395200635",
+    appId: "1:1053395200635:web:116749d7c4f0be4d3710de",
+    measurementId: "G-2V0GHBT5HB"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const authSection = document.getElementById('authSection');
+  const dashboardSection = document.getElementById('dashboardSection');
+  const authForm = document.getElementById('authForm');
+  const emailInput = document.getElementById('emailInput');
+  const passwordInput = document.getElementById('passwordInput');
+  const authButton = document.getElementById('authButton');
+  const toggleAuth = document.getElementById('toggleAuth');
+  const authTitle = document.getElementById('authTitle');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const yearSelect = document.getElementById('yearSelect');
+  const monthSelect = document.getElementById('monthSelect');
+  const dailyAmountInput = document.getElementById('dailyAmountInput');
+  const saveDailyAmountBtn = document.getElementById('saveDailyAmountBtn');
+  const daysTableBody = document.getElementById('daysTableBody');
+  const monthlyGoalDiv = document.getElementById('monthlyGoal');
+  const monthlySavedDiv = document.getElementById('monthlySaved');
+  const monthlyRemainingDiv = document.getElementById('monthlyRemaining');
+
+  const months = [
+    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+  ];
+  const daysInMonth = {
+    'يناير': 31, 'فبراير': 28, 'مارس': 31, 'أبريل': 30,
+    'مايو': 31, 'يونيو': 30, 'يوليو': 31, 'أغسطس': 31,
+    'سبتمبر': 30, 'أكتوبر': 31, 'نوفمبر': 30, 'ديسمبر': 31
+  };
+
+  let isLogin = true;
+  let currentUser = null;
+  let currentUserData = {};
+
+  toggleAuth.onclick = () => {
+    isLogin = !isLogin;
+    authTitle.textContent = isLogin ? 'تسجيل الدخول' : 'إنشاء حساب جديد';
+    authButton.textContent = isLogin ? 'دخول' : 'تسجيل';
+    toggleAuth.textContent = isLogin ? 'ليس لديك حساب؟ سجل هنا' : 'لديك حساب؟ سجل الدخول';
+    passwordInput.autocomplete = isLogin ? 'current-password' : 'new-password';
+  };
+
+  function fillYearSelect() {
+    yearSelect.innerHTML = '';
+    for(let y = 2023; y <= 2030; y++) {
+      yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+    }
+  }
+
+  function fillMonthSelect() {
+    monthSelect.innerHTML = '';
+    months.forEach(m => {
+      monthSelect.innerHTML += `<option value="${m}">${m}</option>`;
+    });
+  }
+
+  function isLeapYear(year) {
+    return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+  }
+
+  async function loadSavingsData(uid) {
+    const doc = await db.collection('savings').doc(uid).get();
+    return doc.exists ? doc.data() : {};
+  }
+
+  async function saveSavingsData(uid, data) {
+    await db.collection('savings').doc(uid).set(data);
+  }
+
+  async function updateDaysTable() {
+    daysTableBody.innerHTML = '';
+    if (!currentUser) return;
+    const year = yearSelect.value;
+    const month = monthSelect.value;
+    if (!year || !month) return;
+
+    let daysCount = daysInMonth[month];
+    if (month === 'فبراير' && isLeapYear(parseInt(year))) daysCount = 29;
+
+    if (!currentUserData[year]) currentUserData[year] = {};
+    if (!currentUserData[year][month]) {
+      currentUserData[year][month] = { dailyAmount: 0, daysSaved: {} };
     }
 
-    // إنشاء حساب
-    function register() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(user => {
-          document.getElementById('msg').innerText = "✅ تم إنشاء الحساب";
-          userId = user.user.uid;
-          showProgress();
-        })
-        .catch(error => document.getElementById('msg').innerText = "❌ " + error.message);
-    }
+    dailyAmountInput.value = currentUserData[year][month].dailyAmount || '';
+    const dailyAmount = currentUserData[year][month].dailyAmount || 0;
+    const monthlyGoal = dailyAmount * daysCount;
+    monthlyGoalDiv.textContent = `🎯 الهدف الشهري: ${monthlyGoal} جنيه`;
 
-    // تسجيل الدخول
-    function login() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      auth.signInWithEmailAndPassword(email, password)
-        .then(user => {
-          document.getElementById('msg').innerText = "✅ تم تسجيل الدخول";
-          userId = user.user.uid;
-          showProgress();
-        })
-        .catch(error => document.getElementById('msg').innerText = "❌ " + error.message);
-    }
+    const savedDays = Object.keys(currentUserData[year][month].daysSaved || {}).length;
+    const savedAmount = savedDays * dailyAmount;
+    const remaining = monthlyGoal - savedAmount;
 
-    // عرض واجهة التقدم
-    function showProgress() {
-      document.getElementById("progressBox").style.display = "block";
-      db.collection("users").doc(userId).get().then(doc => {
-        if (doc.exists && doc.data().savedDays) {
-          savedDays = doc.data().savedDays;
+    monthlySavedDiv.textContent = `💰 المحوش حتى الآن: ${savedAmount} جنيه`;
+    monthlyRemainingDiv.textContent = `⏳ المتبقي: ${remaining} جنيه`;
+
+    for(let day = 1; day <= daysCount; day++) {
+      const tr = document.createElement('tr');
+      const tdDay = document.createElement('td');
+      tdDay.textContent = day;
+      const tdCheck = document.createElement('td');
+      const isSaved = currentUserData[year][month].daysSaved[day];
+      tdCheck.innerHTML = isSaved ? '<span class="checkmark">✓</span>' : '<span class="no-mark">–</span>';
+
+      tdCheck.onclick = async () => {
+        if (dailyAmount <= 0) return alert('حدد المبلغ اليومي أولاً');
+        if (isSaved) {
+          delete currentUserData[year][month].daysSaved[day];
         } else {
-          savedDays = 0;
+          currentUserData[year][month].daysSaved[day] = true;
         }
-        updateProgressBox();
-      });
-    }
+        await saveSavingsData(currentUser.uid, currentUserData);
+        await updateDaysTable();
+        const checkSpan = tdCheck.querySelector('span');
+        checkSpan.classList.add('animate');
+        setTimeout(() => checkSpan.classList.remove('animate'), 700);
+      };
 
-    // الضغط على زر "تم التحويش اليوم"
-    function markSaved() {
-      savedDays++;
-      db.collection("users").doc(userId).set({ savedDays: savedDays });
-      updateProgressBox();
+      tr.appendChild(tdDay);
+      tr.appendChild(tdCheck);
+      daysTableBody.appendChild(tr);
     }
-  </script>
+  }
 
+  saveDailyAmountBtn.onclick = async () => {
+    const year = yearSelect.value;
+    const month = monthSelect.value;
+    const amount = parseFloat(dailyAmountInput.value);
+    if (!year || !month) return alert('اختر السنة والشهر أولاً');
+    if (!amount || amount <= 0) return alert('أدخل مبلغ يومي صالح');
+
+    if (!currentUserData[year]) currentUserData[year] = {};
+    if (!currentUserData[year][month]) currentUserData[year][month] = { dailyAmount: 0, daysSaved: {} };
+
+    currentUserData[year][month].dailyAmount = amount;
+    await saveSavingsData(currentUser.uid, currentUserData);
+    alert('تم حفظ المبلغ اليومي');
+    await updateDaysTable();
+  };
+
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      currentUser = user;
+      authSection.classList.add('hidden');
+      dashboardSection.classList.remove('hidden');
+      fillYearSelect();
+      fillMonthSelect();
+      currentUserData = await loadSavingsData(user.uid);
+      yearSelect.value = new Date().getFullYear();
+      monthSelect.value = months[new Date().getMonth()];
+      updateDaysTable();
+    } else {
+      currentUser = null;
+      authSection.classList.remove('hidden');
+      dashboardSection.classList.add('hidden');
+    }
+  });
+
+  authForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    try {
+      if (isLogin) {
+        await auth.signInWithEmailAndPassword(email, password);
+      } else {
+        await auth.createUserWithEmailAndPassword(email, password);
+        alert('تم إنشاء الحساب بنجاح');
+      }
+      authForm.reset();
+    } catch (error) {
+      alert(error.message);
+    }
+  });
+
+  logoutBtn.onclick = () => auth.signOut();
+</script>
 </body>
 </html>
