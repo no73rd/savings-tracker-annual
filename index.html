@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -15,7 +14,6 @@
     }
     h1 {
       color: #00796b;
-      margin-bottom: 10px;
     }
     select, input, button {
       padding: 6px 10px;
@@ -71,12 +69,27 @@
       70% {opacity: 1; transform: translateY(0);}
       100% {opacity: 0; transform: translateY(-30px);}
     }
+    .dashboard {
+      margin-top: 40px;
+      padding: 15px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .dashboard h2 {
+      color: #004d40;
+    }
+    .month-summary {
+      margin: 10px 0;
+      text-align: right;
+    }
+    .status {
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
-  <h1>💰 جدول التحويش السنوي</h1>
-
-  <div>
+  <h1>💰 جدول التحويش السنوي</h1>  <div>
     <label>السنة:
       <select id="yearSelect"></select>
     </label>
@@ -100,20 +113,16 @@
       <input type="number" id="amountInput" value="200" />
     </label>
     <button onclick="applySettings()">تطبيق</button>
-  </div>
-
-  <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
-
-  <table>
+    <button onclick="testSound()">🔊 جرّب صوت الفلوس</button>
+  </div>  <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>  <table>
     <thead><tr><th>اليوم</th><th>تم التحويش؟</th><th>الإجمالي</th></tr></thead>
     <tbody id="table-body"></tbody>
-  </table>
-
-  <audio id="coin-sound" preload="auto">
+  </table>  <audio id="coin-sound" preload="auto">
     <source src="https://cdn.pixabay.com/audio/2022/10/26/audio_f02ae93093.mp3" type="audio/mp3">
-  </audio>
-
-  <script>
+  </audio>  <div class="dashboard">
+    <h2>📊 لوحة التحويش الشهرية</h2>
+    <div id="dashboard-body"></div>
+  </div>  <script>
     let dailyAmount = 200;
     const tableBody = document.getElementById('table-body');
     const progressBar = document.getElementById('progress-bar');
@@ -121,8 +130,8 @@
     const monthSelect = document.getElementById('monthSelect');
     const amountInput = document.getElementById('amountInput');
     const coinSound = document.getElementById('coin-sound');
+    const dashboardBody = document.getElementById('dashboard-body');
 
-    // إعداد السنوات
     for (let y = 2023; y <= 2035; y++) {
       let opt = document.createElement('option');
       opt.value = y;
@@ -143,8 +152,8 @@
       localStorage.setItem(getStorageKey(yearSelect.value, monthSelect.value), JSON.stringify(data));
     }
 
-    function loadData() {
-      return JSON.parse(localStorage.getItem(getStorageKey(yearSelect.value, monthSelect.value))) || [];
+    function loadData(year, month) {
+      return JSON.parse(localStorage.getItem(getStorageKey(year, month))) || [];
     }
 
     function buildTable() {
@@ -152,7 +161,7 @@
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
       const days = getDaysInMonth(month, year);
-      const saved = loadData();
+      const saved = loadData(year, month);
 
       for (let i = 1; i <= days; i++) {
         const row = document.createElement('tr');
@@ -165,16 +174,15 @@
         if (saved.includes(i)) document.getElementById(`emoji-${i}`).style.display = 'inline';
       }
       updateProgress();
+      buildDashboard();
     }
 
     function handleCheck(el, day) {
-      let saved = loadData();
+      let saved = loadData(parseInt(yearSelect.value), parseInt(monthSelect.value));
       if (el.checked) {
         saved.push(day);
-        try {
-          coinSound.currentTime = 0;
-          coinSound.play().catch(()=>{});
-        } catch(e) {}
+        coinSound.currentTime = 0;
+        coinSound.play().catch(()=>{});
         showFloatingEmojis();
       } else {
         saved = saved.filter(d => d !== day);
@@ -184,7 +192,7 @@
     }
 
     function updateProgress() {
-      const saved = loadData();
+      const saved = loadData(parseInt(yearSelect.value), parseInt(monthSelect.value));
       const year = parseInt(yearSelect.value);
       const month = parseInt(monthSelect.value);
       const totalDays = getDaysInMonth(month, year);
@@ -209,7 +217,31 @@
       });
     }
 
+    function testSound() {
+      coinSound.currentTime = 0;
+      coinSound.play().catch(()=>{});
+    }
+
+    function buildDashboard() {
+      dashboardBody.innerHTML = '';
+      const year = parseInt(yearSelect.value);
+      for (let m = 1; m <= 12; m++) {
+        const saved = loadData(year, m);
+        const days = getDaysInMonth(m, year);
+        const totalSaved = saved.length * dailyAmount;
+        const goal = days * dailyAmount;
+        const percent = Math.round((totalSaved / goal) * 100);
+        const status = percent === 100 ? '✅ اكتمل' : percent === 0 ? '❌ لا يوجد' : '⏳ جاري';
+        dashboardBody.innerHTML += `
+          <div class="month-summary">
+            <strong>📅 ${monthSelect.options[m-1].text}:</strong>
+            ${totalSaved} جنيه من ${goal} جنيه - نسبة الإنجاز: ${percent}%
+            <span class="status">${status}</span>
+          </div>
+        `;
+      }
+    }
+
     buildTable();
-  </script>
-</body>
+  </script></body>
 </html>
