@@ -1,28 +1,35 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>موقع التحويش الاحترافي</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>موقع التحويش</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background: linear-gradient(to right, #e0f7fa, #f1f8e9);
-      padding: 20px;
+      background: linear-gradient(135deg, #e0f2f1, #fce4ec);
+      margin: 0;
+      padding: 0 20px 40px;
     }
-    .dashboard, .section {
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
+    .menu-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1100;
+      background: #00695c;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      font-size: 18px;
     }
     .sidebar {
       position: fixed;
       top: 0;
-      right: -260px;
-      width: 250px;
+      right: -250px;
+      width: 240px;
       height: 100%;
       background-color: #004d40;
       color: white;
@@ -40,36 +47,29 @@
       margin-bottom: 15px;
       font-weight: bold;
     }
-    .menu-toggle {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 1100;
-      background: #00796b;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 5px;
+    .dashboard {
+      margin-top: 80px;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    .dashboard .stat {
+      font-size: 1.1rem;
+      margin-bottom: 10px;
     }
     .section {
       display: none;
     }
     .section.active {
       display: block;
+      margin-top: 20px;
     }
-    .floating-emoji {
-      position: fixed;
-      font-size: 2.5rem;
-      opacity: 0;
-      animation: floatInOut 1.4s ease-in-out;
-      z-index: 9999;
-      pointer-events: none;
+    .progress-bar {
+      transition: width 0.5s ease-in-out;
     }
-    @keyframes floatInOut {
-      0% {opacity: 0; transform: translateY(30px);}
-      30% {opacity: 1; transform: translateY(0);}
-      70% {opacity: 1; transform: translateY(0);}
-      100% {opacity: 0; transform: translateY(-30px);}
+    canvas {
+      max-width: 100%;
     }
   </style>
 </head>
@@ -83,201 +83,248 @@
     <a href="#" onclick="showSection('progressing')">⏳ الشهور قيد التنفيذ</a>
     <a href="#" onclick="showSection('transactions')">💳 سجل التحويل</a>
   </div>
-  <div class="container-fluid">
-    <div class="section active" id="main">
-      <h2>📅 جدول التحويش</h2>
-      <div class="mb-3">
-        <label class="form-label">السنة:</label>
-        <select id="yearSelect" class="form-select d-inline w-auto"></select>
-        <label class="form-label">الشهر:</label>
-        <select id="monthSelect" class="form-select d-inline w-auto">
-          <option value="1">يناير</option>
-          <option value="2">فبراير</option>
-          <option value="3">مارس</option>
-          <option value="4">أبريل</option>
-          <option value="5">مايو</option>
-          <option value="6">يونيو</option>
-          <option value="7" selected>يوليو</option>
-          <option value="8">أغسطس</option>
-          <option value="9">سبتمبر</option>
-          <option value="10">أكتوبر</option>
-          <option value="11">نوفمبر</option>
-          <option value="12">ديسمبر</option>
-        </select>
-        <label class="form-label">المبلغ اليومي:</label>
-        <input type="number" id="amountInput" class="form-control d-inline w-auto" value="200" />
-        <button onclick="applySettings()" class="btn btn-success">تطبيق</button>
-        <button onclick="testSound()" class="btn btn-secondary">🔊 صوت الفلوس</button>
-      </div>
 
-      <div class="progress mb-4" style="height: 25px;">
-        <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+  <div class="container">
+    <!-- 🧠 الداشبورد الذكية -->
+    <div class="dashboard text-center">
+      <h3>لوحة التحويش 📊</h3>
+      <div class="row mt-4">
+        <div class="col-md-4 stat text-success" id="stat-complete">✅ شهور مكتملة: 0</div>
+        <div class="col-md-4 stat text-warning" id="stat-progress">⏳ تحت التنفيذ: 0</div>
+        <div class="col-md-4 stat text-danger" id="stat-incomplete">❌ غير مكتملة: 0</div>
       </div>
-
-      <table class="table table-bordered table-striped">
-        <thead class="table-success">
-          <tr><th>اليوم</th><th>تم التحويش؟</th><th>الإجمالي</th></tr>
+      <canvas id="progressChart" height="100"></canvas>
+    </div>
+    
+    <div id="main" class="section active">
+      <h4>جدول التحويش الشهري</h4>
+      <table class="table table-bordered table-striped mt-3">
+        <thead class="table-light">
+          <tr>
+            <th>الشهر</th>
+            <th>الحالة</th>
+            <th>المبلغ المحوّش</th>
+            <th>الهدف</th>
+            <th>النسبة</th>
+          </tr>
         </thead>
-        <tbody id="table-body"></tbody>
+        <tbody id="savingsTableBody"></tbody>
       </table>
-
-      <audio id="coin-sound" preload="auto">
-        <source src="https://cdn.pixabay.com/audio/2022/10/26/audio_f02ae93093.mp3" type="audio/mp3">
-      </audio>
     </div>
 
-    <div class="section" id="complete"><h2>✅ الشهور المكتملة</h2><ul id="completeList"></ul></div>
-    <div class="section" id="incomplete"><h2>❌ الشهور غير المكتملة</h2><ul id="incompleteList"></ul></div>
-    <div class="section" id="progressing"><h2>⏳ الشهور قيد التنفيذ</h2><ul id="progressList"></ul></div>
-    <div class="section" id="transactions"><h2>💳 سجل التحويل</h2><ul id="transactionList"></ul></div>
+    <!-- الشهور المكتملة -->
+    <div id="complete" class="section">
+      <h4>الشهور المكتملة</h4>
+      <ul id="completeList" class="list-group mt-3"></ul>
+    </div>
+
+    <!-- الشهور غير المكتملة -->
+    <div id="incomplete" class="section">
+      <h4>الشهور غير المكتملة</h4>
+      <ul id="incompleteList" class="list-group mt-3"></ul>
+    </div>
+
+    <!-- الشهور قيد التنفيذ -->
+    <div id="progressing" class="section">
+      <h4>الشهور قيد التنفيذ</h4>
+      <ul id="progressingList" class="list-group mt-3"></ul>
+    </div>
+
+    <!-- سجل التحويل -->
+    <div id="transactions" class="section">
+      <h4>سجل التحويل</h4>
+      <ul id="transactionsList" class="list-group mt-3"></ul>
+    </div>
   </div>
+
   <script>
-let dailyAmount = 200;
+    // بيانات التحويش الشهرية
+    const savingsData = [
+      { month: 'يناير', saved: 1000, goal: 1000 },
+      { month: 'فبراير', saved: 750, goal: 1000 },
+      { month: 'مارس', saved: 400, goal: 1000 },
+      { month: 'أبريل', saved: 1000, goal: 1000 },
+      { month: 'مايو', saved: 900, goal: 1000 },
+      { month: 'يونيو', saved: 0, goal: 1000 },
+      { month: 'يوليو', saved: 300, goal: 1000 },
+      { month: 'أغسطس', saved: 1000, goal: 1000 },
+      { month: 'سبتمبر', saved: 500, goal: 1000 },
+      { month: 'أكتوبر', saved: 1000, goal: 1000 },
+      { month: 'نوفمبر', saved: 1000, goal: 1000 },
+      { month: 'ديسمبر', saved: 1000, goal: 1000 },
+    ];
 
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('active');
-}
-function showSection(id) {
-  document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  if (id === 'complete') buildCompleteList();
-  if (id === 'incomplete') buildIncompleteList();
-  if (id === 'progressing') buildProgressList();
-  if (id === 'transactions') buildTransactions();
-}
+    // سجل التحويل (مثال)
+    const transactions = [
+      { date: '2025-01-05', amount: 1000, month: 'يناير' },
+      { date: '2025-02-10', amount: 750, month: 'فبراير' },
+      { date: '2025-03-15', amount: 400, month: 'مارس' },
+      // أضف معاملات أخرى حسب الحاجة
+    ];
 
-function getMonthName(m) {
-  return ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'][m-1];
-}
-function getDaysInMonth(month, year) {
-  return new Date(year, month, 0).getDate();
-}
-function getStorageKey(year, month) {
-  return `saving-${year}-${month}`;
-}
-function saveData(data) {
-  localStorage.setItem(getStorageKey(yearSelect.value, monthSelect.value), JSON.stringify(data));
-}
-function loadData(year, month) {
-  return JSON.parse(localStorage.getItem(getStorageKey(year, month))) || [];
-}
-function buildTable() {
-  tableBody.innerHTML = '';
-  const year = parseInt(yearSelect.value);
-  const month = parseInt(monthSelect.value);
-  const days = getDaysInMonth(month, year);
-  const saved = loadData(year, month);
-
-  for (let i = 1; i <= days; i++) {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>يوم ${i}</td>
-      <td><input type="checkbox" ${saved.includes(i) ? 'checked' : ''} onchange="handleCheck(this, ${i})"/></td>
-      <td>${saved.includes(i) ? i * dailyAmount + ' جنيه' : '-'}</td>
-    `;
-    tableBody.appendChild(row);
-  }
-  updateProgress();
-}
-function handleCheck(el, day) {
-  let saved = loadData(parseInt(yearSelect.value), parseInt(monthSelect.value));
-  if (el.checked) {
-    saved.push(day);
-    coinSound.currentTime = 0;
-    coinSound.play().catch(()=>{});
-    showFloatingEmojis();
-  } else {
-    saved = saved.filter(d => d !== day);
-  }
-  saveData(saved);
-  buildTable();
-}
-function updateProgress() {
-  const saved = loadData(parseInt(yearSelect.value), parseInt(monthSelect.value));
-  const days = getDaysInMonth(parseInt(monthSelect.value), parseInt(yearSelect.value));
-  const percent = (saved.length / days) * 100;
-  progressBar.style.width = percent + '%';
-}
-function applySettings() {
-  dailyAmount = parseInt(amountInput.value);
-  buildTable();
-}
-function testSound() {
-  coinSound.currentTime = 0;
-  coinSound.play().catch(()=>{});
-}
-function showFloatingEmojis() {
-  ['10%', '50%', '80%'].forEach(pos => {
-    const emoji = document.createElement('div');
-    emoji.className = 'floating-emoji';
-    emoji.textContent = '💸👏';
-    emoji.style.left = pos;
-    emoji.style.top = '40%';
-    document.body.appendChild(emoji);
-    setTimeout(() => document.body.removeChild(emoji), 1400);
-  });
-}
-function buildCompleteList() {
-  const year = new Date().getFullYear();
-  const list = document.getElementById('completeList');
-  list.innerHTML = '';
-  for (let m = 1; m <= 12; m++) {
-    const saved = loadData(year, m);
-    const days = getDaysInMonth(m, year);
-    if (saved.length === days) list.innerHTML += `<li>${getMonthName(m)} مكتمل ✅</li>`;
-  }
-}
-function buildIncompleteList() {
-  const year = new Date().getFullYear();
-  const list = document.getElementById('incompleteList');
-  list.innerHTML = '';
-  for (let m = 1; m <= 12; m++) {
-    const saved = loadData(year, m);
-    if (saved.length === 0) list.innerHTML += `<li>${getMonthName(m)} فارغ ❌</li>`;
-  }
-}
-function buildProgressList() {
-  const year = new Date().getFullYear();
-  const list = document.getElementById('progressList');
-  list.innerHTML = '';
-  for (let m = 1; m <= 12; m++) {
-    const saved = loadData(year, m);
-    const days = getDaysInMonth(m, year);
-    if (saved.length > 0 && saved.length < days) {
-      list.innerHTML += `<li>${getMonthName(m)}: ${saved.length} من ${days} ⏳</li>`;
+    // دالة لتحديد حالة الشهر بناء على saved و goal
+    function getStatus(saved, goal) {
+      if (saved >= goal) return 'مكتملة';
+      if (saved === 0) return 'غير مكتملة';
+      return 'قيد التنفيذ';
     }
-  }
-}
-function buildTransactions() {
-  const list = document.getElementById('transactionList');
-  list.innerHTML = '';
-  for (let y = 2023; y <= 2035; y++) {
-    for (let m = 1; m <= 12; m++) {
-      const saved = loadData(y, m);
-      saved.forEach(day => {
-        list.innerHTML += `<li>${day}/${m}/${y} - تحويش مبلغ</li>`;
+
+    // دالة لتحديث الجدول والقوائم والداشبورد
+    function updateDashboard() {
+      const tbody = document.getElementById('savingsTableBody');
+      const completeList = document.getElementById('completeList');
+      const incompleteList = document.getElementById('incompleteList');
+      const progressingList = document.getElementById('progressingList');
+      const transactionsList = document.getElementById('transactionsList');
+
+      tbody.innerHTML = '';
+      completeList.innerHTML = '';
+      incompleteList.innerHTML = '';
+      progressingList.innerHTML = '';
+      transactionsList.innerHTML = '';
+
+      let completeCount = 0, incompleteCount = 0, progressCount = 0;
+      let chartLabels = [];
+      let chartData = [];
+
+      savingsData.forEach(({ month, saved, goal }) => {
+        const status = getStatus(saved, goal);
+        const percent = Math.min(100, (saved / goal) * 100).toFixed(1);
+
+        // إضافة صف الجدول
+        tbody.innerHTML += `
+          <tr>
+            <td>${month}</td>
+            <td>${status}</td>
+            <td>${saved.toLocaleString()} ج</td>
+            <td>${goal.toLocaleString()} ج</td>
+            <td>
+              <div class="progress">
+                <div class="progress-bar ${status === 'مكتملة' ? 'bg-success' : status === 'قيد التنفيذ' ? 'bg-warning' : 'bg-danger'}" 
+                     role="progressbar" 
+                     style="width: ${percent}%;" 
+                     aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100">${percent}%</div>
+              </div>
+            </td>
+          </tr>
+        `;
+
+        // إضافة القوائم حسب الحالة
+        if (status === 'مكتملة') {
+          completeList.innerHTML += `<li class="list-group-item list-group-item-success">${month} - ${saved.toLocaleString()} ج</li>`;
+          completeCount++;
+        } else if (status === 'غير مكتملة') {
+          incompleteList.innerHTML += `<li class="list-group-item list-group-item-danger">${month} - ${saved.toLocaleString()} ج</li>`;
+          incompleteCount++;
+        } else {
+          progressingList.innerHTML += `<li class="list-group-item list-group-item-warning">${month} - ${saved.toLocaleString()} ج</li>`;
+          progressCount++;
+        }
+
+        chartLabels.push(month);
+        chartData.push(percent);
+      });
+
+      // تحديث الإحصائيات النصية
+      document.getElementById('stat-complete').textContent = `✅ شهور مكتملة: ${completeCount}`;
+      document.getElementById('stat-incomplete').textContent = `❌ غير مكتملة: ${incompleteCount}`;
+      document.getElementById('stat-progress').textContent = `⏳ تحت التنفيذ: ${progressCount}`;
+
+      // تحديث سجل التحويل
+      transactions.forEach(({ date, amount, month }) => {
+        transactionsList.innerHTML += `<li class="list-group-item">${date} - ${month} - ${amount.toLocaleString()} ج</li>`;
+      });
+
+      // تحديث الرسم البياني
+      updateChart(chartLabels, chartData);
+    }
+
+    let chartInstance = null;
+    function updateChart(labels, data) {
+      const ctx = document.getElementById('progressChart').getContext('2d');
+
+      if (chartInstance) {
+        chartInstance.data.labels = labels;
+        chartInstance.data.datasets[0].data = data;
+        chartInstance.update();
+        return;
+      }
+
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'نسبة التحويش الشهري (%)',
+            data: data,
+            backgroundColor: data.map(p => p >= 100 ? '#4caf50' : p > 0 ? '#ffca28' : '#f44336'),
+            borderRadius: 5,
+          }]
+        },
+        options: {
+          indexAxis: 'x',
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 110,
+              ticks: {
+                callback: v => v + '%'
+              }
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: ctx => ctx.parsed.y + '% مكتمل'
+              }
+            }
+          }
+        }
       });
     }
-  }
-}
 
-const yearSelect = document.getElementById('yearSelect');
-const monthSelect = document.getElementById('monthSelect');
-const amountInput = document.getElementById('amountInput');
-const tableBody = document.getElementById('table-body');
-const progressBar = document.getElementById('progress-bar');
-const coinSound = document.getElementById('coin-sound');
+    // تشغيل الأصوات (تنبيه)
+    const audioSuccess = new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
+    const audioWarning = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
 
-for (let y = 2023; y <= 2035; y++) {
-  let opt = document.createElement('option');
-  opt.value = y;
-  opt.textContent = y;
-  yearSelect.appendChild(opt);
-}
-yearSelect.value = new Date().getFullYear();
+    function playSound(status) {
+      if (status === 'مكتملة') {
+        audioSuccess.play();
+      } else if (status === 'قيد التنفيذ') {
+        audioWarning.play();
+      }
+    }
 
-buildTable();
-</script>
+    // تفعيل عرض الأقسام وتحديث البيانات
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      toggleSidebar(false);
+    }
+
+    // عرض وإخفاء القائمة الجانبية
+    function toggleSidebar(forceClose) {
+      const sidebar = document.getElementById('sidebar');
+      if(forceClose === true) {
+        sidebar.classList.remove('active');
+        return;
+      }
+      sidebar.classList.toggle('active');
+    }
+
+    // تحديث الداشبورد عند تحميل الصفحة
+    window.onload = () => {
+      updateDashboard();
+
+      // ممكن تشغل صوت عند أي تحديث أو حسب الحالة هنا
+      savingsData.forEach(({ saved, goal }) => {
+        const status = getStatus(saved, goal);
+        if(status === 'مكتملة' || status === 'قيد التنفيذ') {
+          playSound(status);
+        }
+      });
+    };
+  </script>
 </body>
 </html>
-  
